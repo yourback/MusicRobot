@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <RelativeLayout
+    <android.support.percent.PercentRelativeLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical">
@@ -36,11 +36,53 @@
         <gjjzx.com.robotclient.diy.MyRecyclerView
             android:id="@+id/myrecyclerview"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_below="@id/appbar" />
+            android:layout_height="0dp"
+            android:layout_below="@id/appbar"
+            app:layout_heightPercent="70%" />
+
+        <android.support.percent.PercentRelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_below="@id/myrecyclerview"
+            app:layout_heightPercent="30%">
+
+            <ImageView
+                android:id="@+id/last"
+                android:layout_width="wrap_content"
+                android:layout_height="0dp"
+                android:layout_centerInParent="true"
+                android:layout_toLeftOf="@+id/start_stop"
+                android:background="@color/colorPrimaryDark"
+                android:padding="5dp"
+                android:src="@mipmap/last"
+                app:layout_heightPercent="80%" />
+
+            <ImageView
+                android:id="@+id/start_stop"
+                android:layout_width="wrap_content"
+                android:layout_height="0dp"
+                android:layout_centerInParent="true"
+                android:background="@color/colorAccent"
+                android:padding="5dp"
+                android:tooltipText="夜曲 正在播放"
+                android:src="@mipmap/play"
+                app:layout_heightPercent="80%"
+                app:layout_widthPercent="30%" />
+
+            <ImageView
+                android:id="@+id/next"
+                android:layout_width="wrap_content"
+                android:layout_height="0dp"
+                android:layout_centerInParent="true"
+                android:layout_toRightOf="@id/start_stop"
+                android:background="@color/colorPrimaryDark"
+                android:padding="5dp"
+                android:src="@mipmap/next"
+                app:layout_heightPercent="80%" />
 
 
-    </RelativeLayout>
+        </android.support.percent.PercentRelativeLayout>
+    </android.support.percent.PercentRelativeLayout>
 
 
     <android.support.design.widget.NavigationView
