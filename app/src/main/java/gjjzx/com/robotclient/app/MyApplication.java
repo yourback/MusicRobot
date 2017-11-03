@@ -19,7 +19,7 @@ public class MyApplication extends Application {
     public static final String DSTIP = "192.168.253.1";
     public static final int DSTPORT = 5000;
 
-    //wu
+    //master版本
 
     @Override
     public void onCreate() {
