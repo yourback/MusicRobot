@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">RobotClient</string>
+    <string name="cancel">取消</string>
+    <string name="delete">删除</string>
+    <string name="ret">返回</string>
+    <string name="validation">验证</string>
+</resources>

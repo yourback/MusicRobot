@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<gjjzx.com.robotclient.diy.MyRecyclerView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/myrecyclerview"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent" />
