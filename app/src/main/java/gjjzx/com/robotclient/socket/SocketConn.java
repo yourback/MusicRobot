@@ -51,7 +51,7 @@ public class SocketConn {
     }
 
     //连接方法
-    public void connectToRobot() {
+    public void connectToRobot(String songCode) {
 //        new Thread(new Runnable() {
 //            @Override
 //            public void run() {
@@ -72,7 +72,7 @@ public class SocketConn {
 
         //开线程监听服务器返回数据
         //如果监听启动成功了就意味着socket连接成功了
-        readThread = new ReadThread();
+        readThread = new ReadThread(songCode);
         readThread.start();
 
     }
@@ -110,12 +110,19 @@ public class SocketConn {
 
     //持续监听服务器是否发来数据
     private class ReadThread extends Thread {
+
+        private String code;
+
+        public ReadThread(String songCode) {
+            code = songCode;
+        }
+
         @Override
         public void run() {
             super.run();
             //监听服务器返回数据
             while (true) {
-                String data = recevieData();
+                String data = recevieData(code);
 
                 //data 大于1说明接收到数据了
                 //如果data = null 说明socket 已经断开了
@@ -127,6 +134,11 @@ public class SocketConn {
                 } else if (data.equals("bb")) {
                     MyApplication.isSocketConnected = false;
                     break;
+                } else if (data.equals("256")) {
+                    //歌曲播放结束
+                    if (OrderSongListener != null)
+                        OrderSongListener.songfinished();
+
                 } else {
                     //如果有返回的数据，说明点歌成功
                     //就不需要显示服务器无响应的提示了
@@ -144,18 +156,18 @@ public class SocketConn {
 
 
     //接收服务器传来的数据
-    private String recevieData() {
+    private String recevieData(String code) {
 
         if (socket == null || socket.isClosed() || !socket.isConnected()) {
             try {
                 Log.e(TAG, "socket开启");
-//                socket = new Socket("172.19.27.1", 5000);
                 socket = new Socket();
 //                取目的socket
                 DesInfo des = SPUtil.getDES();
 
                 isa = new InetSocketAddress(des.getIp(), des.getPort());
                 socket.connect(isa, 5000);
+
                 Log.e(TAG, "out生成");
                 out = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
                 Log.e(TAG, "in生成");
@@ -175,6 +187,10 @@ public class SocketConn {
                     Log.e(TAG, "重新生成in");
                     in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
                 }
+
+                //点歌
+                sendMessage(code);
+
                 Log.e(TAG, "等待数据");
                 data = in.readLine();
                 Log.e(TAG, "收到消息：" + data);
@@ -215,6 +231,8 @@ public class SocketConn {
     //点歌成功接口
     public interface OrderSongListener {
         void successFunc(String str);
+
+        void songfinished();
     }
 
     OrderSongListener OrderSongListener;

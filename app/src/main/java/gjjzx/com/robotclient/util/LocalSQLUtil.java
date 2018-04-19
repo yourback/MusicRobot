@@ -46,11 +46,12 @@ public class LocalSQLUtil {
         return DataSupport.findAll(SongBean.class);
     }
 
-    public static void setNoSongPlaying() {
+    public static List<SongBean> setNoSongPlaying() {
         Log.e("LocalSQLUtil", "置全部歌曲都不播放");
         SongBean s = new SongBean();
         s.setToDefault("isPlaying");
         s.updateAll();
+        return DataSupport.findAll(SongBean.class);
     }
 
     public static boolean isSongExist(String columeName, String columeValue) {

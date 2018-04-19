@@ -35,16 +35,19 @@ import gjjzx.com.robotclient.app.MyApplication;
 import gjjzx.com.robotclient.bean.SongBean;
 import gjjzx.com.robotclient.diy.AddSongDialog;
 import gjjzx.com.robotclient.diy.CardRvAdapter;
-import gjjzx.com.robotclient.diy.JudgmentDialog;
+import gjjzx.com.robotclient.diy.DeleteSongDialog;
 import gjjzx.com.robotclient.diy.LoginDialog;
 import gjjzx.com.robotclient.diy.MyRecyclerView;
+import gjjzx.com.robotclient.diy.PowerOffDialog;
 import gjjzx.com.robotclient.diy.SettingDialog;
 import gjjzx.com.robotclient.diy.SongsInfoDialog;
 import gjjzx.com.robotclient.socket.SocketConn;
 import gjjzx.com.robotclient.util.LocalSQLUtil;
+import gjjzx.com.robotclient.util.LogUtil;
+import gjjzx.com.robotclient.util.OrderUtil;
 import gjjzx.com.robotclient.util.SPUtil;
 
-public class MainActivity extends AppCompatActivity implements SettingDialog.onSettingListener, LoginDialog.LoginSuccessListener, JudgmentDialog.DeleteSongListener, AddSongDialog.onAddSongListener {
+public class MainActivity extends AppCompatActivity implements PowerOffDialog.PowerOffListener, SettingDialog.onSettingListener, LoginDialog.LoginSuccessListener, DeleteSongDialog.DeleteSongListener, AddSongDialog.onAddSongListener {
 
     private static final String TAG = "客户端";
     private static final int CONNECTEDFAIL = 10000;
@@ -56,6 +59,8 @@ public class MainActivity extends AppCompatActivity implements SettingDialog.onS
     private static final int DELETEERRORSONG = 10006;
     private static final int ADDSONGSUCCESS = 10007;
     private static final int ADDSONGFAIL = 10008;
+    private static final int SONGPLAYFINISHED = 10009;
+    private static final int POWEROFF = 10010;
 
 
     private DrawerLayout drawerlayout;
@@ -78,8 +83,9 @@ public class MainActivity extends AppCompatActivity implements SettingDialog.onS
     private AddSongDialog addSongDialog;
     private SongsInfoDialog songsInfoDialog;
     private LoginDialog loginDialog;
-    private JudgmentDialog judgmentDialog;
+    private DeleteSongDialog deleteSongDialog;
     private SettingDialog settingDialog;
+    private PowerOffDialog powerOffDialog;
 
     //socket链接对象
     private SocketConn sc;
@@ -99,6 +105,7 @@ public class MainActivity extends AppCompatActivity implements SettingDialog.onS
                     waitingShow((String) message.obj);
                     break;
                 case ORDERSONGSUCCESS:
+                    Toast.makeText(MainActivity.this, "点歌成功，发来消息：" + message.obj, Toast.LENGTH_SHORT).show();
                     switchSongs(currentSong.getSongName());
                     rvAdapter.listRefresh(songList);
                     //点歌成功
@@ -121,6 +128,19 @@ public class MainActivity extends AppCompatActivity implements SettingDialog.onS
                     break;
                 case ADDSONGFAIL:
                     showFail("添加歌曲失败");
+                    break;
+
+                case SONGPLAYFINISHED:
+                    String endSong = titleText.getText().toString().trim().split("：")[1];
+
+                    LogUtil.e("end", endSong);
+                    Toast.makeText(MainActivity.this, endSong + "播放结束", Toast.LENGTH_SHORT).show();
+                    titleText.setText("歌曲列表");
+                    rvAdapter.listRefresh(songList);
+                    break;
+
+                case POWEROFF:
+                    showSuccess("电机关闭成功");
                     break;
                 default:
                     break;
@@ -181,7 +201,7 @@ public class MainActivity extends AppCompatActivity implements SettingDialog.onS
             public void onItemLongClick(View view, int position) {
                 if (MyApplication.isManager) {
 //                    如果是管理者才让删除
-                    judgmentDialog.show(getFragmentManager(), songList.get(position).getSongName());
+                    deleteSongDialog.show(getFragmentManager(), songList.get(position).getSongName());
                 }
             }
         });
@@ -193,8 +213,8 @@ public class MainActivity extends AppCompatActivity implements SettingDialog.onS
     @Override
     public void onAddSong(String sn, String sc) {
 
-        if (Integer.parseInt(sc) < 1) {
-            Toast.makeText(this, "歌曲序号错误", Toast.LENGTH_SHORT).show();
+        if (Integer.parseInt(sc) < 1 || Integer.parseInt(sc) > 255) {
+            Toast.makeText(this, "歌曲序号需在1~255之间", Toast.LENGTH_SHORT).show();
         } else if (TextUtils.isEmpty(sn) || TextUtils.isEmpty(sc)) {
             Toast.makeText(this, "请完善歌曲信息后添加", Toast.LENGTH_LONG).show();
         } else if (LocalSQLUtil.isSongExist("songName", sn)) {
@@ -226,7 +246,7 @@ public class MainActivity extends AppCompatActivity implements SettingDialog.onS
         msg.what = WAITING;
         msg.obj = "歌曲删除中...";
         handler.sendMessage(msg);
-        judgmentDialog.dismiss();
+        deleteSongDialog.dismiss();
         if (currentSong != null)
             if (songName.equals(currentSong.getSongName())) {
                 handler.sendEmptyMessageDelayed(DELETEPLAYINGSONGFAIL, 1000);
@@ -250,9 +270,10 @@ public class MainActivity extends AppCompatActivity implements SettingDialog.onS
     private void initDialog() {
         addSongDialog = new AddSongDialog(this);
         loginDialog = new LoginDialog(this);
-        judgmentDialog = new JudgmentDialog();
+        deleteSongDialog = new DeleteSongDialog();
         settingDialog = new SettingDialog(this);
         songsInfoDialog = new SongsInfoDialog();
+        powerOffDialog = new PowerOffDialog();
     }
 
     //loginDialog管理员验证成功后方法
@@ -307,7 +328,18 @@ public class MainActivity extends AppCompatActivity implements SettingDialog.onS
                 //更新本地数据库中对应的歌曲code为str的播放状态
                 songList = LocalSQLUtil.setSongPlaying(str);
                 //点歌成功，切换歌曲
-                handler.sendEmptyMessageDelayed(ORDERSONGSUCCESS, 1000);
+//                handler.sendEmptyMessageDelayed(ORDERSONGSUCCESS, 1000);
+                Message message = new Message();
+                message.what = ORDERSONGSUCCESS;
+                message.obj = str;
+                handler.sendMessage(message);
+            }
+
+            @Override
+            public void songfinished() {
+                //歌曲播放完毕
+                songList = LocalSQLUtil.setNoSongPlaying();
+                handler.sendEmptyMessage(SONGPLAYFINISHED);
             }
         });
     }
@@ -337,7 +369,7 @@ public class MainActivity extends AppCompatActivity implements SettingDialog.onS
         } else {
             Log.e(TAG, "未连接点歌：" + currentSong.getSongCode());
             //如果没有链接到服务器则进行初始化链接
-            sc.connectToRobot();
+            sc.connectToRobot(currentSong.getSongCode());
             //如果初始化未出错，则进行点歌操作
             handler.postDelayed(new Runnable() {
                 @Override
@@ -412,6 +444,9 @@ public class MainActivity extends AppCompatActivity implements SettingDialog.onS
                                 break;
                             case R.id.nav_settings:
                                 settingDialog.show(getFragmentManager(), "settingDialog");
+                            case R.id.nav_shutdown:
+                                powerOffDialog.show(getFragmentManager(), "powerOffDialog");
+                                break;
                             default:
                                 break;
                         }
@@ -491,5 +526,15 @@ public class MainActivity extends AppCompatActivity implements SettingDialog.onS
         settingDialog.dismiss();
         //修改成功提示
         Toast.makeText(this, "修改成功", Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public void onPowerOff() {
+        Message msg = new Message();
+        msg.what = WAITING;
+        msg.obj = "电机关闭中...";
+        handler.sendMessage(msg);
+        sc.sendMessage(OrderUtil.shutDown());
+        handler.sendEmptyMessageDelayed(POWEROFF, 2000);
     }
 }

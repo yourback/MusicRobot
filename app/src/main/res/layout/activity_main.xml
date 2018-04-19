@@ -11,13 +11,13 @@
         android:background="@mipmap/pan_bg"
         android:fitsSystemWindows="true"
         android:orientation="vertical">
+
         <include layout="@layout/title" />
 
         <gjjzx.com.robotclient.diy.MyRecyclerView
             android:id="@+id/myrecyclerview"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-             />
+            android:layout_height="match_parent" />
 
 
     </LinearLayout>

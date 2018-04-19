@@ -19,7 +19,7 @@ import gjjzx.com.robotclient.R;
  * Created by PC on 2017/11/1.
  */
 
-public class JudgmentDialog extends DialogFragment {
+public class DeleteSongDialog extends DialogFragment {
 
     private Button btn_yes, btn_no;
     private TextView tv_msg;

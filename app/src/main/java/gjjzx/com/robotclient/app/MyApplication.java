@@ -22,7 +22,7 @@ public class MyApplication extends Application {
     public void onCreate() {
         super.onCreate();
         LitePal.initialize(this);
-        content = getApplicationContext();
+        content = this;
     }
 
     public static Context getContext() {
