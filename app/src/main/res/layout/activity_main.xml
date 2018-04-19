@@ -5,85 +5,122 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <android.support.percent.PercentRelativeLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical">
-
-        <ImageView
-            android:id="@+id/songBackground"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_below="@+id/appbar"
-            android:background="#8000"
-            android:visibility="gone" />
-
-        <android.support.design.widget.AppBarLayout
-            android:id="@+id/appbar"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content">
-
-            <include layout="@layout/title" />
-        </android.support.design.widget.AppBarLayout>
-
-
-        <!--<FrameLayout-->
-        <!--android:id="@+id/fragment_container"-->
+    <!--<android.support.percent.PercentRelativeLayout-->
         <!--android:layout_width="match_parent"-->
         <!--android:layout_height="match_parent"-->
-        <!--android:layout_below="@id/appbar" />-->
+        <!--android:background="@mipmap/pan_bg"-->
+        <!--android:fitsSystemWindows="true"-->
+        <!--android:orientation="vertical">-->
+
+        <!--&lt;!&ndash;<ImageView&ndash;&gt;-->
+        <!--&lt;!&ndash;android:id="@+id/songBackground"&ndash;&gt;-->
+        <!--&lt;!&ndash;android:layout_width="match_parent"&ndash;&gt;-->
+        <!--&lt;!&ndash;android:layout_height="match_parent"&ndash;&gt;-->
+        <!--&lt;!&ndash;android:layout_below="@+id/appbar"&ndash;&gt;-->
+        <!--&lt;!&ndash;android:background="#8000"&ndash;&gt;-->
+        <!--&lt;!&ndash;android:visibility="gone" />&ndash;&gt;-->
+
+
+        <!--<include layout="@layout/title" />-->
+
+        <!--<android.support.design.widget.AppBarLayout-->
+            <!--android:id="@+id/appbar"-->
+            <!--android:layout_width="match_parent"-->
+            <!--android:layout_height="wrap_content"-->
+            <!--android:background="@android:color/transparent"-->
+            <!--android:fitsSystemWindows="true">-->
+
+            <!--<include layout="@layout/title" />-->
+        <!--</android.support.design.widget.AppBarLayout>-->
+
+
+        <!--&lt;!&ndash;<FrameLayout&ndash;&gt;-->
+        <!--&lt;!&ndash;android:id="@+id/fragment_container"&ndash;&gt;-->
+        <!--&lt;!&ndash;android:layout_width="match_parent"&ndash;&gt;-->
+        <!--&lt;!&ndash;android:layout_height="match_parent"&ndash;&gt;-->
+        <!--&lt;!&ndash;android:layout_below="@id/appbar" />&ndash;&gt;-->
+
+        <!--<gjjzx.com.robotclient.diy.MyRecyclerView-->
+            <!--android:id="@+id/myrecyclerview"-->
+            <!--android:layout_width="match_parent"-->
+            <!--android:layout_height="0dp"-->
+            <!--android:layout_below="@id/appbar"-->
+            <!--app:layout_heightPercent="88%" />-->
+
+        <!--<RelativeLayout-->
+            <!--android:layout_width="match_parent"-->
+            <!--android:layout_height="match_parent"-->
+            <!--android:layout_below="@id/myrecyclerview"-->
+            <!--android:visibility="gone">-->
+
+            <!--<TextView-->
+                <!--android:layout_width="wrap_content"-->
+                <!--android:layout_height="wrap_content"-->
+                <!--android:layout_centerInParent="true"-->
+                <!--android:text="哈哈哈哈" />-->
+
+        <!--</RelativeLayout>-->
+
+        <!--&lt;!&ndash;<android.support.percent.PercentRelativeLayout&ndash;&gt;-->
+        <!--&lt;!&ndash;android:layout_width="match_parent"&ndash;&gt;-->
+        <!--&lt;!&ndash;android:layout_height="0dp"&ndash;&gt;-->
+        <!--&lt;!&ndash;android:layout_below="@id/myrecyclerview"&ndash;&gt;-->
+        <!--&lt;!&ndash;app:layout_heightPercent="30%">&ndash;&gt;-->
+
+        <!--&lt;!&ndash;<ImageView&ndash;&gt;-->
+        <!--&lt;!&ndash;android:id="@+id/last"&ndash;&gt;-->
+        <!--&lt;!&ndash;android:layout_width="wrap_content"&ndash;&gt;-->
+        <!--&lt;!&ndash;android:layout_height="0dp"&ndash;&gt;-->
+        <!--&lt;!&ndash;android:layout_centerInParent="true"&ndash;&gt;-->
+        <!--&lt;!&ndash;android:layout_toLeftOf="@+id/start_stop"&ndash;&gt;-->
+        <!--&lt;!&ndash;android:background="@color/colorPrimaryDark"&ndash;&gt;-->
+        <!--&lt;!&ndash;android:padding="5dp"&ndash;&gt;-->
+        <!--&lt;!&ndash;android:src="@mipmap/last"&ndash;&gt;-->
+        <!--&lt;!&ndash;app:layout_heightPercent="80%" />&ndash;&gt;-->
+
+        <!--&lt;!&ndash;<ImageView&ndash;&gt;-->
+        <!--&lt;!&ndash;android:id="@+id/start_stop"&ndash;&gt;-->
+        <!--&lt;!&ndash;android:layout_width="wrap_content"&ndash;&gt;-->
+        <!--&lt;!&ndash;android:layout_height="0dp"&ndash;&gt;-->
+        <!--&lt;!&ndash;android:layout_centerInParent="true"&ndash;&gt;-->
+        <!--&lt;!&ndash;android:background="@color/colorAccent"&ndash;&gt;-->
+        <!--&lt;!&ndash;android:padding="5dp"&ndash;&gt;-->
+        <!--&lt;!&ndash;android:tooltipText="夜曲 正在播放"&ndash;&gt;-->
+        <!--&lt;!&ndash;android:src="@mipmap/play"&ndash;&gt;-->
+        <!--&lt;!&ndash;app:layout_heightPercent="80%"&ndash;&gt;-->
+        <!--&lt;!&ndash;app:layout_widthPercent="30%" />&ndash;&gt;-->
+
+        <!--&lt;!&ndash;<ImageView&ndash;&gt;-->
+        <!--&lt;!&ndash;android:id="@+id/next"&ndash;&gt;-->
+        <!--&lt;!&ndash;android:layout_width="wrap_content"&ndash;&gt;-->
+        <!--&lt;!&ndash;android:layout_height="0dp"&ndash;&gt;-->
+        <!--&lt;!&ndash;android:layout_centerInParent="true"&ndash;&gt;-->
+        <!--&lt;!&ndash;android:layout_toRightOf="@id/start_stop"&ndash;&gt;-->
+        <!--&lt;!&ndash;android:background="@color/colorPrimaryDark"&ndash;&gt;-->
+        <!--&lt;!&ndash;android:padding="5dp"&ndash;&gt;-->
+        <!--&lt;!&ndash;android:src="@mipmap/next"&ndash;&gt;-->
+        <!--&lt;!&ndash;app:layout_heightPercent="80%" />&ndash;&gt;-->
+
+
+        <!--&lt;!&ndash;</android.support.percent.PercentRelativeLayout>&ndash;&gt;-->
+    <!--</android.support.percent.PercentRelativeLayout>-->
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@mipmap/pan_bg"
+        android:fitsSystemWindows="true"
+        android:orientation="vertical">
+        <include layout="@layout/title" />
 
         <gjjzx.com.robotclient.diy.MyRecyclerView
             android:id="@+id/myrecyclerview"
             android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_below="@id/appbar"
-            app:layout_heightPercent="70%" />
-
-        <android.support.percent.PercentRelativeLayout
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_below="@id/myrecyclerview"
-            app:layout_heightPercent="30%">
-
-            <ImageView
-                android:id="@+id/last"
-                android:layout_width="wrap_content"
-                android:layout_height="0dp"
-                android:layout_centerInParent="true"
-                android:layout_toLeftOf="@+id/start_stop"
-                android:background="@color/colorPrimaryDark"
-                android:padding="5dp"
-                android:src="@mipmap/last"
-                app:layout_heightPercent="80%" />
-
-            <ImageView
-                android:id="@+id/start_stop"
-                android:layout_width="wrap_content"
-                android:layout_height="0dp"
-                android:layout_centerInParent="true"
-                android:background="@color/colorAccent"
-                android:padding="5dp"
-                android:tooltipText="夜曲 正在播放"
-                android:src="@mipmap/play"
-                app:layout_heightPercent="80%"
-                app:layout_widthPercent="30%" />
-
-            <ImageView
-                android:id="@+id/next"
-                android:layout_width="wrap_content"
-                android:layout_height="0dp"
-                android:layout_centerInParent="true"
-                android:layout_toRightOf="@id/start_stop"
-                android:background="@color/colorPrimaryDark"
-                android:padding="5dp"
-                android:src="@mipmap/next"
-                app:layout_heightPercent="80%" />
+            android:layout_height="match_parent"
+             />
 
 
-        </android.support.percent.PercentRelativeLayout>
-    </android.support.percent.PercentRelativeLayout>
-
+    </LinearLayout>
 
     <android.support.design.widget.NavigationView
         android:id="@+id/navigation"

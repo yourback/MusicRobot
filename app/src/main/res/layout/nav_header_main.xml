@@ -5,10 +5,10 @@
 
     <ImageView
         android:id="@+id/nav_head_image"
-        android:layout_width="70dp"
-        android:layout_height="70dp"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
         android:layout_centerInParent="true"
-        android:src="@mipmap/ic_launcher_round" />
+        android:src="@mipmap/loginb" />
 
     <TextView
         android:id="@+id/nav_head_tv"
@@ -19,6 +19,6 @@
         android:layout_marginTop="10dp"
         android:text="登录"
         android:textColor="#fff"
-        android:textSize="30sp" />
+        android:textSize="20sp" />
 
 </RelativeLayout>

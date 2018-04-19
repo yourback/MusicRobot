@@ -14,23 +14,24 @@ import gjjzx.com.robotclient.bean.SongBean;
  */
 
 public class LocalSQLUtil {
-    public static void addSong(SongBean sb) {
+    public static List<SongBean> addSong(SongBean sb) {
         sb.save();
+        return DataSupport.findAll(SongBean.class);
     }
 
     public static List<SongBean> getNewSongList() {
         List<SongBean> list = DataSupport.findAll(SongBean.class);
         if (list.size() == 0) {
-            addSong(new SongBean(R.mipmap.picture_1, "月光", "0"));
-            addSong(new SongBean(R.mipmap.picture_2, "命运", "1"));
-            addSong(new SongBean(R.mipmap.picture_3, "夜曲", "2"));
-            addSong(new SongBean(R.mipmap.picture_4, "极乐净土", "3"));
-            addSong(new SongBean(R.mipmap.picture_5, "白夜", "4"));
-            addSong(new SongBean(R.mipmap.picture_6, "是非题", "5"));
-            addSong(new SongBean(R.mipmap.picture_7, "花香", "6"));
-            addSong(new SongBean(R.mipmap.picture_8, "海阔天空", "7"));
-            addSong(new SongBean(R.mipmap.picture_9, "童话镇", "8"));
-            addSong(new SongBean(R.mipmap.picture_10, "我的天空", "9"));
+            addSong(new SongBean(R.mipmap.pan, "月光", "0"));
+            addSong(new SongBean(R.mipmap.pan, "命运", "1"));
+            addSong(new SongBean(R.mipmap.pan, "夜曲", "2"));
+            addSong(new SongBean(R.mipmap.pan, "极乐净土", "3"));
+            addSong(new SongBean(R.mipmap.pan, "白夜", "4"));
+            addSong(new SongBean(R.mipmap.pan, "是非题", "5"));
+            addSong(new SongBean(R.mipmap.pan, "花香", "6"));
+            addSong(new SongBean(R.mipmap.pan, "海阔天空", "7"));
+            addSong(new SongBean(R.mipmap.pan, "童话镇", "8"));
+            addSong(new SongBean(R.mipmap.pan, "我的天空", "9"));
         }
         list = DataSupport.findAll(SongBean.class);
         LogUtil.e("LocalSQLUtil", "从本地数据库取出的数据：");
@@ -40,8 +41,9 @@ public class LocalSQLUtil {
         return list;
     }
 
-    public static void delSong(String code) {
+    public static List<SongBean> delSong(String code) {
         DataSupport.deleteAll(SongBean.class, "songCode = ?", code);
+        return DataSupport.findAll(SongBean.class);
     }
 
     public static void setNoSongPlaying() {

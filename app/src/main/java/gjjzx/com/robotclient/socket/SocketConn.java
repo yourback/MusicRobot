@@ -12,6 +12,9 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 
 import gjjzx.com.robotclient.app.MyApplication;
+import gjjzx.com.robotclient.bean.DesInfo;
+import gjjzx.com.robotclient.util.OrderUtil;
+import gjjzx.com.robotclient.util.SPUtil;
 
 /**
  * Created by PC on 2017/10/23.
@@ -83,10 +86,10 @@ public class SocketConn {
                     //output = new PrintStream(socket.getOutputStream(), true, "gbk");
                     out = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
                 }
-                //上数据
-                out.write(songCode);
-                //结算
-                out.flush();
+
+                //根据songcode获得命令
+                String srd = OrderUtil.switchSong(songCode);
+                sendMessage(srd);
             } catch (Exception e) {
                 Log.e(TAG, "out 初始化失败");
                 MyApplication.isSocketConnected = false;
@@ -148,7 +151,10 @@ public class SocketConn {
                 Log.e(TAG, "socket开启");
 //                socket = new Socket("172.19.27.1", 5000);
                 socket = new Socket();
-                isa = new InetSocketAddress(MyApplication.DSTIP, MyApplication.DSTPORT);
+//                取目的socket
+                DesInfo des = SPUtil.getDES();
+
+                isa = new InetSocketAddress(des.getIp(), des.getPort());
                 socket.connect(isa, 5000);
                 Log.e(TAG, "out生成");
                 out = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));

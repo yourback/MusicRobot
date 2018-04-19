@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
+    android:id="@+id/sytitle"
     android:layout_height="?attr/actionBarSize"
     android:background="@android:color/transparent"
     android:orientation="vertical">
@@ -21,7 +22,8 @@
         android:layout_centerInParent="true"
         android:text="歌曲列表"
         android:textColor="#fff"
-        android:textSize="20sp" />
+        android:textStyle="bold"
+        android:textSize="27sp" />
 
     <Button
         android:id="@+id/title_right_btn"
@@ -30,7 +32,6 @@
         android:layout_alignParentRight="true"
         android:layout_centerVertical="true"
         android:layout_marginRight="10dp"
-        android:background="@mipmap/synchronization"
         android:visibility="gone"/>
 
 </RelativeLayout>

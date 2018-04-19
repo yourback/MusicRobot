@@ -1,5 +1,7 @@
 package gjjzx.com.robotclient;
 
+import android.graphics.Color;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -36,10 +38,13 @@ import gjjzx.com.robotclient.diy.CardRvAdapter;
 import gjjzx.com.robotclient.diy.JudgmentDialog;
 import gjjzx.com.robotclient.diy.LoginDialog;
 import gjjzx.com.robotclient.diy.MyRecyclerView;
+import gjjzx.com.robotclient.diy.SettingDialog;
+import gjjzx.com.robotclient.diy.SongsInfoDialog;
 import gjjzx.com.robotclient.socket.SocketConn;
 import gjjzx.com.robotclient.util.LocalSQLUtil;
+import gjjzx.com.robotclient.util.SPUtil;
 
-public class MainActivity extends AppCompatActivity implements LoginDialog.LoginSuccessListener, JudgmentDialog.DeleteSongListener, AddSongDialog.onAddSongListener {
+public class MainActivity extends AppCompatActivity implements SettingDialog.onSettingListener, LoginDialog.LoginSuccessListener, JudgmentDialog.DeleteSongListener, AddSongDialog.onAddSongListener {
 
     private static final String TAG = "客户端";
     private static final int CONNECTEDFAIL = 10000;
@@ -67,14 +72,14 @@ public class MainActivity extends AppCompatActivity implements LoginDialog.Login
 
     private TextView titleText;
 
-    private ImageView songBackground;
 
     private Button titleLeftBtn;
-    private Button titleRightBtn;
 
     private AddSongDialog addSongDialog;
+    private SongsInfoDialog songsInfoDialog;
     private LoginDialog loginDialog;
     private JudgmentDialog judgmentDialog;
+    private SettingDialog settingDialog;
 
     //socket链接对象
     private SocketConn sc;
@@ -87,7 +92,6 @@ public class MainActivity extends AppCompatActivity implements LoginDialog.Login
                     currentSong = null;
                     LocalSQLUtil.setNoSongPlaying();
                     titleText.setText("歌曲列表");
-                    songBackground.setVisibility(View.GONE);
                     //显示点歌失败
                     showFail("失败\n请检查机器人是否开启");
                     break;
@@ -95,7 +99,7 @@ public class MainActivity extends AppCompatActivity implements LoginDialog.Login
                     waitingShow((String) message.obj);
                     break;
                 case ORDERSONGSUCCESS:
-                    switchSongs(currentSong.getSongName(), currentSong.getSongPic());
+                    switchSongs(currentSong.getSongName());
                     rvAdapter.listRefresh(songList);
                     //点歌成功
                     showSuccess("点歌成功");
@@ -130,6 +134,12 @@ public class MainActivity extends AppCompatActivity implements LoginDialog.Login
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        if (Build.VERSION.SDK_INT >= 21) {
+            View decorView = getWindow().getDecorView();
+            decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN | View.SYSTEM_UI_FLAG_LAYOUT_STABLE);
+            getWindow().setStatusBarColor(Color.TRANSPARENT);
+        }
 
         findView();
 
@@ -183,7 +193,9 @@ public class MainActivity extends AppCompatActivity implements LoginDialog.Login
     @Override
     public void onAddSong(String sn, String sc) {
 
-        if (TextUtils.isEmpty(sn) || !TextUtils.isEmpty(sc)) {
+        if (Integer.parseInt(sc) < 1) {
+            Toast.makeText(this, "歌曲序号错误", Toast.LENGTH_SHORT).show();
+        } else if (TextUtils.isEmpty(sn) || TextUtils.isEmpty(sc)) {
             Toast.makeText(this, "请完善歌曲信息后添加", Toast.LENGTH_LONG).show();
         } else if (LocalSQLUtil.isSongExist("songName", sn)) {
             Toast.makeText(this, "歌曲名称已存在，请重试", Toast.LENGTH_LONG).show();
@@ -191,14 +203,15 @@ public class MainActivity extends AppCompatActivity implements LoginDialog.Login
             Toast.makeText(this, "歌曲代码已存在，请重试", Toast.LENGTH_SHORT).show();
         } else {
             //添加数据到本地数据库中
-            SongBean sb = new SongBean(R.mipmap.pic_1, sn, sc);
+            SongBean sb = new SongBean(R.mipmap.pan, sn, sc);
             Message msg = new Message();
             msg.what = WAITING;
             msg.obj = "歌曲添加中...";
             handler.sendMessage(msg);
             addSongDialog.dismiss();
             try {
-                LocalSQLUtil.addSong(sb);
+                songList = LocalSQLUtil.addSong(sb);
+                rvAdapter.listRefresh(songList);
                 handler.sendEmptyMessageDelayed(ADDSONGSUCCESS, 1000);
             } catch (Exception e) {
                 handler.sendEmptyMessageDelayed(ADDSONGFAIL, 1000);
@@ -222,8 +235,7 @@ public class MainActivity extends AppCompatActivity implements LoginDialog.Login
         try {
             for (SongBean sb : songList) {
                 if (sb.getSongName().equals(songName)) {
-                    LocalSQLUtil.delSong(sb.getSongCode());
-                    songList = LocalSQLUtil.getNewSongList();
+                    songList = LocalSQLUtil.delSong(sb.getSongCode());
                     rvAdapter.listRefresh(songList);
                     handler.sendEmptyMessageDelayed(DELETESONGSUCCESS, 1000);
                     return;
@@ -239,6 +251,8 @@ public class MainActivity extends AppCompatActivity implements LoginDialog.Login
         addSongDialog = new AddSongDialog(this);
         loginDialog = new LoginDialog(this);
         judgmentDialog = new JudgmentDialog();
+        settingDialog = new SettingDialog(this);
+        songsInfoDialog = new SongsInfoDialog();
     }
 
     //loginDialog管理员验证成功后方法
@@ -246,7 +260,7 @@ public class MainActivity extends AppCompatActivity implements LoginDialog.Login
     public void onLoginSuccessListener(boolean isSuccess) {
         if (isSuccess) {
             loginDialog.dismiss();
-            Glide.with(MainActivity.this).load(R.mipmap.pic_2).into(headImage);
+            Glide.with(MainActivity.this).load(R.mipmap.logina).into(headImage);
             headTv.setText("管理员");
             MyApplication.isManager = true;
             Toast.makeText(MainActivity.this, "进入管理模式", Toast.LENGTH_SHORT).show();
@@ -300,10 +314,8 @@ public class MainActivity extends AppCompatActivity implements LoginDialog.Login
 
 
     //点歌成功的回调需要执行的
-    public void switchSongs(String songName, int songPic) {
+    public void switchSongs(String songName) {
         titleText.setText(String.format("当前播放曲目：%s", songName));
-        Glide.with(this).load(songPic).into(songBackground);
-        songBackground.setVisibility(View.VISIBLE);
     }
 
     //保存当前点的歌曲
@@ -360,14 +372,14 @@ public class MainActivity extends AppCompatActivity implements LoginDialog.Login
         navigationView = (NavigationView) findViewById(R.id.navigation);
         drawerlayout = (DrawerLayout) findViewById(R.id.drawer_layout);
         titleText = (TextView) findViewById(R.id.title_text);
-        songBackground = (ImageView) findViewById(R.id.songBackground);
-        titleRightBtn = (Button) findViewById(R.id.title_right_btn);
         titleLeftBtn = (Button) findViewById(R.id.title_left_btn);
 
         View headerView = navigationView.getHeaderView(0);
 
         headImage = headerView.findViewById(R.id.nav_head_image);
         headTv = headerView.findViewById(R.id.nav_head_tv);
+
+        headerView.setBackgroundColor(Color.parseColor("#40808080"));
 
         headerView.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -378,6 +390,7 @@ public class MainActivity extends AppCompatActivity implements LoginDialog.Login
             }
         });
 
+        // 侧面菜单设置
         navigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
             @Override
             public boolean onNavigationItemSelected(@NonNull MenuItem item) {
@@ -385,6 +398,8 @@ public class MainActivity extends AppCompatActivity implements LoginDialog.Login
 
                 if (id == R.id.nav_about) {
                     Toast.makeText(MainActivity.this, "关于", Toast.LENGTH_SHORT).show();
+                } else if (id == R.id.nav_songs) {
+                    songsInfoDialog.show(getFragmentManager(), "songsInfoDialog");
                 } else {
                     //如果是点的增加或者删除如果不是管理者提示登录后进行曲目管理
                     if (MyApplication.isManager) {
@@ -394,6 +409,9 @@ public class MainActivity extends AppCompatActivity implements LoginDialog.Login
                                 break;
                             case R.id.nav_del:
                                 Toast.makeText(MainActivity.this, "长按曲目进行删除操作", Toast.LENGTH_SHORT).show();
+                                break;
+                            case R.id.nav_settings:
+                                settingDialog.show(getFragmentManager(), "settingDialog");
                             default:
                                 break;
                         }
@@ -408,7 +426,7 @@ public class MainActivity extends AppCompatActivity implements LoginDialog.Login
             }
         });
 
-        titleRightBtn.setOnClickListener(new View.OnClickListener() {
+        titleText.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
 
@@ -461,5 +479,17 @@ public class MainActivity extends AppCompatActivity implements LoginDialog.Login
         } else {
             finish();
         }
+    }
+
+    @Override
+    public void onSetting(String ip, int port) {
+        //存储数据，并断开连接
+        SPUtil.saveDES(ip, port);
+        //断开socket链接
+        sc.closeAll();
+        //隐藏
+        settingDialog.dismiss();
+        //修改成功提示
+        Toast.makeText(this, "修改成功", Toast.LENGTH_SHORT).show();
     }
 }
