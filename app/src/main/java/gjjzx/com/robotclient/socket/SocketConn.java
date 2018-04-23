@@ -234,7 +234,7 @@ public class SocketConn {
     }
 
     //向服务端发送数据
-    public void sendMessage(String str) {
+    public void sendMessage(String str) {  
         try {
             LogUtil.e("sendMessage", "发送消息：" + str);
             out.write(str);
