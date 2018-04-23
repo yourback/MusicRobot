@@ -235,10 +235,10 @@ public class SocketManager {
                 LogUtil.e("orderSongInner", "关闭输入流/输出流失败");
             }
         }
-    }
+    } 
 
     private void orderSongInner(SongBean song) {
-        
+
         try {
             orderManager("start",song);
             LogUtil.e("orderSongInner", "创建输出流");
