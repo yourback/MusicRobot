@@ -235,7 +235,7 @@ public class SocketConn {
         void songfinished();
     }
 
-    OrderSongListener OrderSongListener;
+    OrderSongListener OrderSongListener;  
 
     public void setOrderSongListener(OrderSongListener OrderSongListener) {
         this.OrderSongListener = OrderSongListener;
