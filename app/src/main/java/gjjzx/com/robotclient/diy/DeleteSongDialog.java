@@ -40,7 +40,7 @@ public class DeleteSongDialog extends DialogFragment {
         //点击外部不消失
         getDialog().setCanceledOnTouchOutside(false);
 
-        View v = inflater.inflate(R.layout.judgmentdialog, null);
+        View v = inflater.inflate(R.layout.delsongjudgmentdialog, null);
 
         btn_yes = v.findViewById(R.id.judgment_yes);
         btn_no = v.findViewById(R.id.judgment_no);

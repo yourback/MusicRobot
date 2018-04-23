@@ -4,4 +4,6 @@
     <string name="delete">删除</string>
     <string name="ret">返回</string>
     <string name="validation">验证</string>
+    <string name="submit">确认</string>
+    <string name="shutdown">关闭</string>
 </resources>

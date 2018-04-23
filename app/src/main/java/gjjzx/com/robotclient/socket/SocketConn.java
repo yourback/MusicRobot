@@ -13,6 +13,7 @@ import java.net.Socket;
 
 import gjjzx.com.robotclient.app.MyApplication;
 import gjjzx.com.robotclient.bean.DesInfo;
+import gjjzx.com.robotclient.util.LogUtil;
 import gjjzx.com.robotclient.util.OrderUtil;
 import gjjzx.com.robotclient.util.SPUtil;
 
@@ -72,9 +73,14 @@ public class SocketConn {
 
         //开线程监听服务器返回数据
         //如果监听启动成功了就意味着socket连接成功了
-        readThread = new ReadThread(songCode);
-        readThread.start();
-
+        if (readThread == null) {
+            readThread = new ReadThread();
+            readThread.start(songCode);
+            LogUtil.e("readThread", "线程为空");
+        } else {
+            readThread.run(songCode);
+            LogUtil.e("readThread", "线程不为空");
+        }
     }
 
     //点歌方法
@@ -113,9 +119,6 @@ public class SocketConn {
 
         private String code;
 
-        public ReadThread(String songCode) {
-            code = songCode;
-        }
 
         @Override
         public void run() {
@@ -138,7 +141,6 @@ public class SocketConn {
                     //歌曲播放结束
                     if (OrderSongListener != null)
                         OrderSongListener.songfinished();
-
                 } else {
                     //如果有返回的数据，说明点歌成功
                     //就不需要显示服务器无响应的提示了
@@ -151,6 +153,22 @@ public class SocketConn {
 
 
             }
+        }
+
+        public void start(String songCode) {
+            code = songCode;
+            try {
+                start();
+            } catch (Exception e) {
+                LogUtil.e("线程出错", "该线程已经开启");
+                run();
+            }
+
+        }
+
+        public void run(String songCode) {
+            code = songCode;
+            run();
         }
     }
 
@@ -176,7 +194,7 @@ public class SocketConn {
             } catch (IOException e) {
                 Log.e(TAG, "错了" + e.toString());
                 //弹出链接服务器失败的提示
-                connectedFail.failFunc();
+                return "";
             }
         }
         String data = null;
@@ -189,7 +207,7 @@ public class SocketConn {
                 }
 
                 //点歌
-                sendMessage(code);
+                orderSong(code);
 
                 Log.e(TAG, "等待数据");
                 data = in.readLine();
@@ -209,8 +227,7 @@ public class SocketConn {
             } catch (IOException e) {
                 Log.e(TAG, "in 初始化失败");
                 MyApplication.isSocketConnected = false;
-                if (connectedFail != null)
-                    connectedFail.failFunc();
+                return "";
             }
         }
         return data;
@@ -219,6 +236,7 @@ public class SocketConn {
     //向服务端发送数据
     public void sendMessage(String str) {
         try {
+            LogUtil.e("sendMessage", "发送消息：" + str);
             out.write(str);
             out.flush();
         } catch (Exception e) {

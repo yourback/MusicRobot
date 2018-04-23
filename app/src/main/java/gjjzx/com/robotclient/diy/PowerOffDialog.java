@@ -31,7 +31,7 @@ public class PowerOffDialog extends DialogFragment {
         //点击外部不消失
         getDialog().setCanceledOnTouchOutside(false);
 
-        View v = inflater.inflate(R.layout.judgmentdialog, null);
+        View v = inflater.inflate(R.layout.poweroffjudgmentdialog, null);
 
         btn_yes = v.findViewById(R.id.judgment_yes);
         btn_no = v.findViewById(R.id.judgment_no);
@@ -42,6 +42,7 @@ public class PowerOffDialog extends DialogFragment {
             public void onClick(View view) {
                 PowerOffListener listener = (PowerOffListener) getActivity();
                 listener.onPowerOff();
+                dismiss();
             }
         });
 

@@ -27,6 +27,7 @@ import com.bumptech.glide.Glide;
 
 import net.lemonsoft.lemonbubble.LemonBubble;
 
+import java.lang.ref.WeakReference;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -42,12 +43,12 @@ import gjjzx.com.robotclient.diy.PowerOffDialog;
 import gjjzx.com.robotclient.diy.SettingDialog;
 import gjjzx.com.robotclient.diy.SongsInfoDialog;
 import gjjzx.com.robotclient.socket.SocketConn;
+import gjjzx.com.robotclient.socket.SocketManager;
 import gjjzx.com.robotclient.util.LocalSQLUtil;
 import gjjzx.com.robotclient.util.LogUtil;
-import gjjzx.com.robotclient.util.OrderUtil;
 import gjjzx.com.robotclient.util.SPUtil;
 
-public class MainActivity extends AppCompatActivity implements PowerOffDialog.PowerOffListener, SettingDialog.onSettingListener, LoginDialog.LoginSuccessListener, DeleteSongDialog.DeleteSongListener, AddSongDialog.onAddSongListener {
+public class MainActivity extends AppCompatActivity implements SocketManager.powerListener, SocketManager.ConnectListener, SocketManager.OrderListener, PowerOffDialog.PowerOffListener, SettingDialog.onSettingListener, LoginDialog.LoginSuccessListener, DeleteSongDialog.DeleteSongListener, AddSongDialog.onAddSongListener {
 
     private static final String TAG = "客户端";
     private static final int CONNECTEDFAIL = 10000;
@@ -90,6 +91,11 @@ public class MainActivity extends AppCompatActivity implements PowerOffDialog.Po
     //socket链接对象
     private SocketConn sc;
 
+
+    //弱引用对象
+    private UIhandler mHandler;
+
+
     private Handler handler = new Handler(new Handler.Callback() {
         @Override
         public boolean handleMessage(Message message) {
@@ -106,7 +112,7 @@ public class MainActivity extends AppCompatActivity implements PowerOffDialog.Po
                     break;
                 case ORDERSONGSUCCESS:
                     Toast.makeText(MainActivity.this, "点歌成功，发来消息：" + message.obj, Toast.LENGTH_SHORT).show();
-                    switchSongs(currentSong.getSongName());
+//                    switchSongs(currentSong.getSongName());
                     rvAdapter.listRefresh(songList);
                     //点歌成功
                     showSuccess("点歌成功");
@@ -165,7 +171,7 @@ public class MainActivity extends AppCompatActivity implements PowerOffDialog.Po
 
         initRecyclerView();
 
-        initSocketConn();
+//        initSocketConn();
 
         initDialog();
 
@@ -173,7 +179,7 @@ public class MainActivity extends AppCompatActivity implements PowerOffDialog.Po
 
     //recyclerview初始化
     private void initRecyclerView() {
-        songList = LocalSQLUtil.getNewSongList();
+        songList = LocalSQLUtil.setNoSongPlaying();
 
         SnapHelper snapHelper = new LinearSnapHelper();
         snapHelper.attachToRecyclerView(rv);
@@ -346,9 +352,29 @@ public class MainActivity extends AppCompatActivity implements PowerOffDialog.Po
 
 
     //点歌成功的回调需要执行的
-    public void switchSongs(String songName) {
-        titleText.setText(String.format("当前播放曲目：%s", songName));
+    public void switchSongs(SongBean song) {
+        //点歌成功后设置本地数据库全歌曲不在播放
+        LocalSQLUtil.setNoSongPlaying();
+        //更新本地数据库中对应的歌曲code为str的播放状态
+        songList = LocalSQLUtil.setSongPlaying(song.getSongCode());
+        //切换
+        titleText.setText(String.format("当前播放曲目：%s", song.getSongName()));
+        //刷新列表
+        rvAdapter.listRefresh(songList);
     }
+
+    //关机成功后的执行函数
+    public void powerOff() {
+        songList = LocalSQLUtil.setNoSongPlaying();
+
+        titleText.setText("歌曲列表");
+
+        //刷新列表
+        rvAdapter.listRefresh(songList);
+        //当前播放音乐为空
+        currentSong = null;
+    }
+
 
     //保存当前点的歌曲
     private SongBean currentSong;
@@ -356,29 +382,41 @@ public class MainActivity extends AppCompatActivity implements PowerOffDialog.Po
     //点歌（adapter调用）
     public void orderSong(SongBean songBean) {
         //显示等待的圈圈
-        Message msg = new Message();
-        msg.what = WAITING;
-        msg.obj = "点歌中，请稍后...";
-        handler.sendMessage(msg);
-        currentSong = songBean;
+//        Message msg = new Message();
+//        msg.what = WAITING;
+//        msg.obj = "点歌中，请稍后...";
+//        handler.sendMessage(msg);
+//        currentSong = songBean;
+
+//        orderSongs(currentSong.getSongCode());
+        orderSongs(songBean);
+
+
         //检查是否已经链接到服务器
-        if (MyApplication.isSocketConnected) {
-            Log.e(TAG, "已连接点歌：" + currentSong.getSongCode());
-            //若已经连接，直接sendMessage
-            sc.orderSong(currentSong.getSongCode());
-        } else {
-            Log.e(TAG, "未连接点歌：" + currentSong.getSongCode());
-            //如果没有链接到服务器则进行初始化链接
-            sc.connectToRobot(currentSong.getSongCode());
-            //如果初始化未出错，则进行点歌操作
-            handler.postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    if (currentSong != null)
-                        sc.orderSong(currentSong.getSongCode());
-                }
-            }, 2000);
-        }
+//        if (MyApplication.isSocketConnected) {
+//            Log.e(TAG, "已连接点歌：" + currentSong.getSongCode());
+//            //若已经连接，直接sendMessage
+//            sc.orderSong(currentSong.getSongCode());
+//
+//
+//
+//
+//
+//        } else {
+//            Log.e(TAG, "未连接点歌：" + currentSong.getSongCode());
+//            //如果没有链接到服务器则进行初始化链接
+//            sc.connectToRobot(currentSong.getSongCode());
+
+
+//            //如果初始化未出错，则进行点歌操作
+//            handler.postDelayed(new Runnable() {
+//                @Override
+//                public void run() {
+//                    if (currentSong != null)
+//                        sc.orderSong(currentSong.getSongCode());
+//                }
+//            }, 2000);
+//        }
     }
 
 
@@ -399,6 +437,11 @@ public class MainActivity extends AppCompatActivity implements PowerOffDialog.Po
 
     //视图绑定
     private void findView() {
+
+        //弱引用对象
+        mHandler = new UIhandler(this);
+
+
         rv = (MyRecyclerView) findViewById(R.id.myrecyclerview);
 
         navigationView = (NavigationView) findViewById(R.id.navigation);
@@ -444,6 +487,7 @@ public class MainActivity extends AppCompatActivity implements PowerOffDialog.Po
                                 break;
                             case R.id.nav_settings:
                                 settingDialog.show(getFragmentManager(), "settingDialog");
+                                break;
                             case R.id.nav_shutdown:
                                 powerOffDialog.show(getFragmentManager(), "powerOffDialog");
                                 break;
@@ -484,7 +528,7 @@ public class MainActivity extends AppCompatActivity implements PowerOffDialog.Po
 //       所有歌曲都不在播放
         LocalSQLUtil.setNoSongPlaying();
 //        断开socket链接
-        sc.closeAll();
+//        sc.closeAll();
     }
 
 
@@ -493,9 +537,8 @@ public class MainActivity extends AppCompatActivity implements PowerOffDialog.Po
         exitBy2Click();
     }
 
-    /**
-     * 双击退出函数
-     */
+
+    //双击退出函数
     private static Boolean isExit = false;
 
     private void exitBy2Click() {
@@ -521,20 +564,138 @@ public class MainActivity extends AppCompatActivity implements PowerOffDialog.Po
         //存储数据，并断开连接
         SPUtil.saveDES(ip, port);
         //断开socket链接
-        sc.closeAll();
+        if (sc != null)
+            sc.closeAll();
         //隐藏
         settingDialog.dismiss();
         //修改成功提示
         Toast.makeText(this, "修改成功", Toast.LENGTH_SHORT).show();
     }
 
+//    @Override
+//    public void onPowerOff() {
+//        Message msg = new Message();
+//        msg.what = WAITING;
+//        msg.obj = "电机关闭中...";
+//        handler.sendMessage(msg);
+//        sc.sendMessage(OrderUtil.shutDown());
+//        handler.sendEmptyMessageDelayed(POWEROFF, 2000);
+//    }
+
+
+    //    -----------------------------------------新点歌操作------------------------------------------------
+    public void orderSongs(SongBean song) {
+        SocketManager.getSocket(this).orderSong(song);
+    }
+
+
     @Override
     public void onPowerOff() {
-        Message msg = new Message();
-        msg.what = WAITING;
-        msg.obj = "电机关闭中...";
-        handler.sendMessage(msg);
-        sc.sendMessage(OrderUtil.shutDown());
-        handler.sendEmptyMessageDelayed(POWEROFF, 2000);
+        SocketManager.getSocket(this).powerOff();
+    }
+
+    @Override
+    public void connectFail() {
+        mHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                showFail("连接失败");
+            }
+        });
+    }
+
+    @Override
+    public void connectSuccess() {
+        mHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                waitingShow("连接成功！");
+            }
+        });
+    }
+
+    @Override
+    public void connectStart() {
+        mHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                waitingShow("正在连接机器人...");
+            }
+        });
+    }
+
+    @Override
+    public void orderFail(SongBean song) {
+        mHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                showFail("点歌失败");
+            }
+        });
+    }
+
+    @Override
+    public void orderSuccess(final SongBean song) {
+
+        mHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                switchSongs(song);
+                showSuccess("点歌成功！");
+            }
+        });
+    }
+
+    @Override
+    public void orderStart(SongBean song) {
+        mHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                waitingShow("正在点歌...");
+            }
+        });
+    }
+
+    @Override
+    public void powerStart() {
+        mHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                waitingShow("正在关机...");
+            }
+        });
+    }
+
+    @Override
+    public void powerFail() {
+        mHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                showFail("关机失败");
+            }
+        });
+    }
+
+    @Override
+    public void powerSuccess() {
+        mHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                //刷新题头 和 数据库 和列表
+                powerOff();
+                showSuccess("关机成功");
+
+            }
+        });
+    }
+
+    //弱引用
+    class UIhandler extends Handler {
+        WeakReference<MainActivity> weakReference = null;
+
+
+        public UIhandler(MainActivity mainActivity) {
+            this.weakReference = new WeakReference<MainActivity>(mainActivity);
+        }
     }
 }
