@@ -32,10 +32,19 @@ public class OrderUtil {
     // 切歌
     public static String switchSong(String musicid) {
         /**
-         * 关机发送的消息：
+         * 切歌发送的消息：
          * 0xEE 0xEE ID=0x01 MusicID=musicid SW=0x01 CRC=~(ID+MusicID+SW)&0xFF
          */
         return int2Order(1, Integer.parseInt(musicid), 1);
+    }
+
+    // 音乐播放结束
+    public static String stopSong() {
+        /**
+         * 关机发送的消息：
+         * 0xEE 0xEE ID=0x05 MusicID=0x01 SW=0x00 CRC=~(ID+MusicID+SW)&0xFF
+         */
+        return int2Order(5, 1, 0);
     }
 
     // 主动断开连接

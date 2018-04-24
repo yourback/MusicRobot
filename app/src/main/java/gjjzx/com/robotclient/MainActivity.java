@@ -1,5 +1,8 @@
 package gjjzx.com.robotclient;
 
+import android.app.AlarmManager;
+import android.app.PendingIntent;
+import android.content.Intent;
 import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
@@ -42,13 +45,14 @@ import gjjzx.com.robotclient.diy.MyRecyclerView;
 import gjjzx.com.robotclient.diy.PowerOffDialog;
 import gjjzx.com.robotclient.diy.SettingDialog;
 import gjjzx.com.robotclient.diy.SongsInfoDialog;
+import gjjzx.com.robotclient.socket.AlarmReceiver;
 import gjjzx.com.robotclient.socket.SocketConn;
 import gjjzx.com.robotclient.socket.SocketManager;
 import gjjzx.com.robotclient.util.LocalSQLUtil;
 import gjjzx.com.robotclient.util.LogUtil;
 import gjjzx.com.robotclient.util.SPUtil;
 
-public class MainActivity extends AppCompatActivity implements SocketManager.powerListener, SocketManager.ConnectListener, SocketManager.OrderListener, PowerOffDialog.PowerOffListener, SettingDialog.onSettingListener, LoginDialog.LoginSuccessListener, DeleteSongDialog.DeleteSongListener, AddSongDialog.onAddSongListener {
+public class MainActivity extends AppCompatActivity implements SocketManager.songPlayingStopListener, SocketManager.powerListener, SocketManager.ConnectListener, SocketManager.OrderListener, PowerOffDialog.PowerOffListener, SettingDialog.onSettingListener, LoginDialog.LoginSuccessListener, DeleteSongDialog.DeleteSongListener, AddSongDialog.onAddSongListener {
 
     private static final String TAG = "客户端";
     private static final int CONNECTEDFAIL = 10000;
@@ -62,6 +66,19 @@ public class MainActivity extends AppCompatActivity implements SocketManager.pow
     private static final int ADDSONGFAIL = 10008;
     private static final int SONGPLAYFINISHED = 10009;
     private static final int POWEROFF = 10010;
+
+
+    //歌曲停止定制操作，相关变量
+
+    //歌曲停止时间
+    private static final long SONGSTOPTIME = 5 * 1000;
+
+    private Intent i;
+
+    private AlarmManager am;
+
+    private PendingIntent sender;
+    //----------------------------------------
 
 
     private DrawerLayout drawerlayout;
@@ -175,7 +192,10 @@ public class MainActivity extends AppCompatActivity implements SocketManager.pow
 
         initDialog();
 
+        initAlarm();
+
     }
+
 
     //recyclerview初始化
     private void initRecyclerView() {
@@ -435,6 +455,9 @@ public class MainActivity extends AppCompatActivity implements SocketManager.pow
         LemonBubble.showRight(this, str, 1000);
     }
 
+    //弹窗消失
+    private void waitingHide(){LemonBubble.hide();}
+
     //视图绑定
     private void findView() {
 
@@ -584,16 +607,21 @@ public class MainActivity extends AppCompatActivity implements SocketManager.pow
 
 
     //    -----------------------------------------新点歌操作------------------------------------------------
+
+    //点歌操作
     public void orderSongs(SongBean song) {
         SocketManager.getSocket(this).orderSong(song);
     }
 
-
+    //关机操作
     @Override
     public void onPowerOff() {
         SocketManager.getSocket(this).powerOff();
     }
 
+
+    //---------------------------------------------重写连接接口--------------------------------------
+    //连接失败
     @Override
     public void connectFail() {
         mHandler.post(new Runnable() {
@@ -604,6 +632,7 @@ public class MainActivity extends AppCompatActivity implements SocketManager.pow
         });
     }
 
+    //连接成功
     @Override
     public void connectSuccess() {
         mHandler.post(new Runnable() {
@@ -614,6 +643,7 @@ public class MainActivity extends AppCompatActivity implements SocketManager.pow
         });
     }
 
+    //开始连接
     @Override
     public void connectStart() {
         mHandler.post(new Runnable() {
@@ -624,6 +654,9 @@ public class MainActivity extends AppCompatActivity implements SocketManager.pow
         });
     }
 
+    //---------------------------------------------重写点歌接口--------------------------------------
+
+    //点歌失败
     @Override
     public void orderFail(SongBean song) {
         mHandler.post(new Runnable() {
@@ -634,18 +667,23 @@ public class MainActivity extends AppCompatActivity implements SocketManager.pow
         });
     }
 
+    //点歌成功
     @Override
     public void orderSuccess(final SongBean song) {
 
         mHandler.post(new Runnable() {
             @Override
             public void run() {
+                //切歌
                 switchSongs(song);
+                //重新设置定时器
+                setAlarm();
                 showSuccess("点歌成功！");
             }
         });
     }
 
+    //开始点歌
     @Override
     public void orderStart(SongBean song) {
         mHandler.post(new Runnable() {
@@ -656,6 +694,9 @@ public class MainActivity extends AppCompatActivity implements SocketManager.pow
         });
     }
 
+    //---------------------------------------------重写关机接口--------------------------------------
+
+    //开始关机
     @Override
     public void powerStart() {
         mHandler.post(new Runnable() {
@@ -666,6 +707,7 @@ public class MainActivity extends AppCompatActivity implements SocketManager.pow
         });
     }
 
+    //关机失败
     @Override
     public void powerFail() {
         mHandler.post(new Runnable() {
@@ -676,6 +718,7 @@ public class MainActivity extends AppCompatActivity implements SocketManager.pow
         });
     }
 
+    //关机成功
     @Override
     public void powerSuccess() {
         mHandler.post(new Runnable() {
@@ -689,6 +732,36 @@ public class MainActivity extends AppCompatActivity implements SocketManager.pow
         });
     }
 
+    //---------------------------------------------重写关机接口--------------------------------------
+
+    //开始发送音乐停止信息
+    @Override
+    public void stopStart() {
+        LogUtil.e("音乐停止", "开始停止");
+    }
+
+    //发送停止失败
+    @Override
+    public void stopFail() {
+        LogUtil.e("音乐停止", "停止失败");
+    }
+
+    //发送停止成功
+    @Override
+    public void stopSuccess() {
+        mHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                waitingHide();
+                Toast.makeText(MainActivity.this, "当前音乐播放完毕", Toast.LENGTH_SHORT).show();
+                powerOff();
+            }
+        });
+    }
+
+
+//    ----------------------------------------------------------------------------------------------
+
     //弱引用
     class UIhandler extends Handler {
         WeakReference<MainActivity> weakReference = null;
@@ -698,4 +771,29 @@ public class MainActivity extends AppCompatActivity implements SocketManager.pow
             this.weakReference = new WeakReference<MainActivity>(mainActivity);
         }
     }
+
+    //---------------------------------------------定时器部分--------------------------------------
+
+    private void initAlarm() {
+        i = new Intent(this, AlarmReceiver.class);
+        i.setAction("STOPPLAYING");
+        sender = PendingIntent.getBroadcast(this, 0, i, 0);
+        am = (AlarmManager) getSystemService(ALARM_SERVICE);
+    }
+
+    //重新开始定时
+    public void setAlarm() {
+        LogUtil.e("setAlarm", "定时器设置成功歌曲将在 " + SONGSTOPTIME + "秒 后结束播放");
+        if (am != null) {
+            am.cancel(sender);
+        }
+
+        //5秒后发送广播
+        assert am != null;
+        am.set(AlarmManager.ELAPSED_REALTIME_WAKEUP
+                , SONGSTOPTIME, sender);
+    }
+
+
+
 }

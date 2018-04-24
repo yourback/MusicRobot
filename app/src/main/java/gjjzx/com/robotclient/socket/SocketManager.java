@@ -35,6 +35,8 @@ public class SocketManager {
     //输入流
     private static BufferedReader br;
 
+//  ------------------------------------------------------------------------------------------------
+
     //连接接口
     public interface ConnectListener {
         void connectFail();
@@ -65,11 +67,8 @@ public class SocketManager {
         }
     }
 
-    private SocketManager(Context context) {
-        connectListener = (ConnectListener) context;
-        orderListener = (OrderListener) context;
-        powerListener = (powerListener) context;
-    }
+
+//  ------------------------------------------------------------------------------------------------
 
     //点歌接口
     public interface OrderListener {
@@ -84,7 +83,7 @@ public class SocketManager {
     private OrderListener orderListener;
 
     //点歌接口管理
-    private void orderManager(String op,SongBean song) {
+    private void orderManager(String op, SongBean song) {
         if (orderListener == null)
             return;
         switch (op) {
@@ -100,6 +99,7 @@ public class SocketManager {
             default:
         }
     }
+//  ------------------------------------------------------------------------------------------------
 
     //关机接口
     public interface powerListener {
@@ -111,7 +111,7 @@ public class SocketManager {
     }
 
     //关机接口对象
-    powerListener powerListener;
+    private powerListener powerListener;
 
     //关机接口管理
     private void powerManager(String op) {
@@ -131,6 +131,39 @@ public class SocketManager {
         }
     }
 
+    //  ------------------------------------------------------------------------------------------------
+
+    //音乐播放停止接口
+    public interface songPlayingStopListener {
+        void stopStart();
+
+        void stopFail();
+
+        void stopSuccess();
+    }
+
+    //音乐播放停止接口对象
+    private songPlayingStopListener songPlayingStopListener;
+
+    //关机接口管理
+    private void stopManager(String op) {
+        if (songPlayingStopListener == null)
+            return;
+        switch (op) {
+            case "start":
+                songPlayingStopListener.stopStart();
+                break;
+            case "success":
+                songPlayingStopListener.stopSuccess();
+                break;
+            case "fail":
+                songPlayingStopListener.stopFail();
+                break;
+            default:
+        }
+    }
+
+//  ------------------------------------------------------------------------------------------------
 
     //初始化socket
     private boolean initSocket() {
@@ -153,6 +186,13 @@ public class SocketManager {
         }
     }
 
+    private SocketManager(Context context) {
+        connectListener = (ConnectListener) context;
+        orderListener = (OrderListener) context;
+        powerListener = (powerListener) context;
+        songPlayingStopListener = (songPlayingStopListener) context;
+    }
+
 
     public static SocketManager getSocket(Context c) {
         if (mThreadPool == null) {
@@ -167,6 +207,8 @@ public class SocketManager {
         }
         return socketManager;
     }
+
+//  ------------------------------------------------------------------------------------------------
 
     //点歌
     public void orderSong(final SongBean song) {
@@ -187,6 +229,54 @@ public class SocketManager {
             }
         });
     }
+
+    private void orderSongInner(SongBean song) {
+        try {
+            orderManager("start", song);
+            LogUtil.e("点歌", "创建输出流");
+            if (bw == null) {
+                bw = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
+                LogUtil.e("点歌", "创建输出流成功");
+            }
+            bw.write(OrderUtil.switchSong(song.getSongCode()));
+            bw.flush();
+            LogUtil.e("点歌", "数据发出成功，创建输入流");
+            //发送后立即接收
+            if (br == null) {
+                br = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+                LogUtil.e("点歌", "创建输入流成功");
+            }
+            String s = br.readLine();
+            LogUtil.e("点歌", "输入流收到数据：" + s);
+            if (song.getSongCode().equals(s)) {
+                LogUtil.e("点歌", "点歌：" + song.getSongCode() + "，返回：" + s);
+                orderManager("success", song);
+            } else {
+                LogUtil.e("点歌", "songcode与返回值不符合");
+                orderManager("fail", song);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            LogUtil.e("点歌", e.toString());
+            LogUtil.e("点歌", "创建输入流/输出流&发送失败");
+            orderManager("fail", song);
+        } finally {
+            try {
+                bw.close();
+                br.close();
+                bw = null;
+                br = null;
+                socket.close();
+                socket = null;
+                LogUtil.e("点歌", "关闭输入输出流成功");
+            } catch (IOException e) {
+                LogUtil.e("点歌", e.toString());
+                LogUtil.e("点歌", "关闭输入流/输出流失败");
+            }
+        }
+    }
+
+//  ------------------------------------------------------------------------------------------------
 
     //关机
     public void powerOff() {
@@ -210,18 +300,18 @@ public class SocketManager {
     private void powerOffInner() {
         try {
             powerManager("start");
-            LogUtil.e("orderSongInner", "创建输出流");
+            LogUtil.e("关机", "创建输出流");
             if (bw == null) {
                 bw = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
-                LogUtil.e("orderSongInner", "创建输出流成功");
+                LogUtil.e("关机", "创建输出流成功");
             }
             bw.write(OrderUtil.shutDown());
             bw.flush();
-            LogUtil.e("orderSongInner", "数据发出成功，创建输入流");
+            LogUtil.e("关机", "数据发出成功，创建输入流");
             powerManager("success");
         } catch (Exception e) {
-            LogUtil.e("orderSongInner", e.toString());
-            LogUtil.e("orderSongInner", "创建输入流/输出流&发送失败");
+            LogUtil.e("关机", e.toString());
+            LogUtil.e("关机", "创建输入流/输出流&发送失败");
             powerManager("fail");
         } finally {
             try {
@@ -229,45 +319,68 @@ public class SocketManager {
                 bw = null;
                 socket.close();
                 socket = null;
-                LogUtil.e("orderSongInner", "关闭输入输出流成功");
+                LogUtil.e("关机", "关闭输入输出流成功");
             } catch (IOException e) {
-                LogUtil.e("orderSongInner", e.toString());
-                LogUtil.e("orderSongInner", "关闭输入流/输出流失败");
+                LogUtil.e("关机", e.toString());
+                LogUtil.e("关机", "关闭输入流/输出流失败");
             }
         }
-    } 
+    }
 
-    private void orderSongInner(SongBean song) {
+//  ------------------------------------------------------------------------------------------------
 
+    //歌曲停止
+    public void stopPlaying() {
+        mThreadPool.execute(new Runnable() {
+            @Override
+            public void run() {
+                if (socket == null || socket.isClosed() || !socket.isConnected()) {
+                    if (initSocket()) {
+                        LogUtil.e("音乐停止播放", "连接成功后发送停止播放信息");
+                        stopPlayingInner();
+                    }
+
+                } else {
+                    LogUtil.e("音乐停止播放", "连接已经建立，发送播放信息");
+                    stopPlayingInner();
+                }
+            }
+        });
+    }
+
+    private void stopPlayingInner() {
         try {
-            orderManager("start",song);
-            LogUtil.e("orderSongInner", "创建输出流");
+            stopManager("start");
+            LogUtil.e("音乐停止播放", "创建输出流");
             if (bw == null) {
                 bw = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
-                LogUtil.e("orderSongInner", "创建输出流成功");
+                LogUtil.e("音乐停止播放", "创建输出流成功");
             }
-            bw.write(OrderUtil.switchSong(song.getSongCode()));
+            bw.write(OrderUtil.stopSong());
             bw.flush();
-            LogUtil.e("orderSongInner", "数据发出成功，创建输入流");
+            LogUtil.e("音乐停止播放", "数据发出成功，创建输入流");
             //发送后立即接收
             if (br == null) {
                 br = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-                LogUtil.e("orderSongInner", "创建输入流成功");
+                LogUtil.e("音乐停止播放", "创建输入流成功");
             }
             String s = br.readLine();
-            LogUtil.e("orderSongInner", "输入流收到数据：" + s);
-            if (song.getSongCode().equals(s)) {
-                LogUtil.e("orderSongInner", "点歌：" + song.getSongCode() + "，返回：" + s);
-                orderManager("success",song);
-            } else {
-                LogUtil.e("orderSongInner", "songcode与返回值不符合");
-                orderManager("fail",song);
+            LogUtil.e("音乐停止播放", "输入流收到数据：" + s);
+
+            /**
+             * 接收到停止播放返回数据
+             * 目前只做停止操作
+             */
+            if (s.equals("256"))
+                stopManager("success");
+            else {
+                stopManager("fail");
             }
         } catch (Exception e) {
             e.printStackTrace();
-            LogUtil.e("orderSongInner", e.toString());
-            LogUtil.e("orderSongInner", "创建输入流/输出流&发送失败");
-            orderManager("fail",song);
+            LogUtil.e("音乐停止播放", e.toString());
+            LogUtil.e("音乐停止播放", "创建输入流/输出流&发送失败");
+            stopManager("fail");
         } finally {
             try {
                 bw.close();
@@ -276,13 +389,12 @@ public class SocketManager {
                 br = null;
                 socket.close();
                 socket = null;
-                LogUtil.e("orderSongInner", "关闭输入输出流成功");
+                LogUtil.e("音乐停止播放", "关闭输入输出流成功");
             } catch (IOException e) {
-                LogUtil.e("orderSongInner", e.toString());
-                LogUtil.e("orderSongInner", "关闭输入流/输出流失败");
+                LogUtil.e("音乐停止播放", e.toString());
+                LogUtil.e("音乐停止播放", "关闭输入流/输出流失败");
             }
         }
-
     }
 
 
