@@ -8,6 +8,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.os.SystemClock;
 import android.support.annotation.NonNull;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
@@ -69,10 +70,6 @@ public class MainActivity extends AppCompatActivity implements SocketManager.son
 
 
     //歌曲停止定制操作，相关变量
-
-    //歌曲停止时间
-    private static final long SONGSTOPTIME = 5 * 1000;
-
     private Intent i;
 
     private AlarmManager am;
@@ -456,7 +453,9 @@ public class MainActivity extends AppCompatActivity implements SocketManager.son
     }
 
     //弹窗消失
-    private void waitingHide(){LemonBubble.hide();}
+    private void waitingHide() {
+        LemonBubble.hide();
+    }
 
     //视图绑定
     private void findView() {
@@ -583,9 +582,11 @@ public class MainActivity extends AppCompatActivity implements SocketManager.son
     }
 
     @Override
-    public void onSetting(String ip, int port) {
+    public void onSetting(String ip, int port, int timedelay) {
         //存储数据，并断开连接
         SPUtil.saveDES(ip, port);
+        //存储音乐结束时间
+        SPUtil.setStopTime(timedelay);
         //断开socket链接
         if (sc != null)
             sc.closeAll();
@@ -732,7 +733,7 @@ public class MainActivity extends AppCompatActivity implements SocketManager.son
         });
     }
 
-    //---------------------------------------------重写关机接口--------------------------------------
+    //---------------------------------------------音乐停止接口--------------------------------------
 
     //开始发送音乐停止信息
     @Override
@@ -783,17 +784,15 @@ public class MainActivity extends AppCompatActivity implements SocketManager.son
 
     //重新开始定时
     public void setAlarm() {
-        LogUtil.e("setAlarm", "定时器设置成功歌曲将在 " + SONGSTOPTIME + "秒 后结束播放");
+        LogUtil.e("setAlarm", "定时器设置成功歌曲将在 " + SPUtil.getStopTime() + "秒 后结束播放");
         if (am != null) {
             am.cancel(sender);
         }
 
         //5秒后发送广播
-        assert am != null;
         am.set(AlarmManager.ELAPSED_REALTIME_WAKEUP
-                , SONGSTOPTIME, sender);
+                , SystemClock.elapsedRealtime() + SPUtil.getStopTime() * 1000, sender);
     }
-
 
 
 }

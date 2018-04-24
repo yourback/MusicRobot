@@ -21,6 +21,7 @@ public class LocalSQLUtil {
 
     public static List<SongBean> getNewSongList() {
         List<SongBean> list = DataSupport.findAll(SongBean.class);
+        Log.e("getNewSongList", "之前：" + list);
         if (list.size() == 0) {
             addSong(new SongBean(R.mipmap.pan, "月光", "0"));
             addSong(new SongBean(R.mipmap.pan, "命运", "1"));
@@ -33,6 +34,7 @@ public class LocalSQLUtil {
             addSong(new SongBean(R.mipmap.pan, "童话镇", "8"));
             addSong(new SongBean(R.mipmap.pan, "我的天空", "9"));
         }
+        Log.e("getNewSongList", "之后：" + list);
         list = DataSupport.findAll(SongBean.class);
         LogUtil.e("LocalSQLUtil", "从本地数据库取出的数据：");
         for (SongBean s : list) {
@@ -43,7 +45,7 @@ public class LocalSQLUtil {
 
     public static List<SongBean> delSong(String code) {
         DataSupport.deleteAll(SongBean.class, "songCode = ?", code);
-        return DataSupport.findAll(SongBean.class);
+        return getNewSongList();
     }
 
     public static List<SongBean> setNoSongPlaying() {
@@ -51,7 +53,7 @@ public class LocalSQLUtil {
         SongBean s = new SongBean();
         s.setToDefault("isPlaying");
         s.updateAll();
-        return DataSupport.findAll(SongBean.class);
+        return getNewSongList();
     }
 
     public static boolean isSongExist(String columeName, String columeValue) {

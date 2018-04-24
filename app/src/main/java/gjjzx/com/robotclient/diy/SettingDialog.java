@@ -25,6 +25,7 @@ import gjjzx.com.robotclient.util.SPUtil;
 public class SettingDialog extends DialogFragment {
     private EditText desIP;
     private EditText desPort;
+    private EditText timeDelay;
 
     private Button setSubmit;
 
@@ -46,6 +47,12 @@ public class SettingDialog extends DialogFragment {
 
         View v = inflater.inflate(R.layout.settingdialog, null);
 
+        Integer stopTime = SPUtil.getStopTime();
+
+        timeDelay = v.findViewById(R.id.time_delay);
+        timeDelay.setText(stopTime + "");
+
+
         // 获得SP中的地址显示
         DesInfo des = SPUtil.getDES();
 
@@ -60,8 +67,11 @@ public class SettingDialog extends DialogFragment {
             public void onClick(View view) {
                 String ip = desIP.getText().toString().trim();
                 int port = Integer.parseInt(desPort.getText().toString().trim());
+                int timedelay = Integer.parseInt(timeDelay.getText().toString().trim());
+
+
                 SettingDialog.onSettingListener listener = (onSettingListener) getActivity();
-                listener.onSetting(ip, port);
+                listener.onSetting(ip, port, timedelay);
             }
         });
 
@@ -81,6 +91,6 @@ public class SettingDialog extends DialogFragment {
 
 
     public interface onSettingListener {
-        void onSetting(String ip, int port);
+        void onSetting(String ip, int port, int timedelay);
     }
 }
