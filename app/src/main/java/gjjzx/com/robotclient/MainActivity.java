@@ -49,6 +49,8 @@ import gjjzx.com.robotclient.util.SPUtil;
 
 public class MainActivity extends AppCompatActivity implements PowerOffDialog.PowerOffListener, SettingDialog.onSettingListener, LoginDialog.LoginSuccessListener, DeleteSongDialog.DeleteSongListener, AddSongDialog.onAddSongListener {
 
+    
+
     private static final String TAG = "客户端";
     private static final int CONNECTEDFAIL = 10000;
     private static final int ORDERSONGSUCCESS = 10001;
