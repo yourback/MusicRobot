@@ -42,10 +42,7 @@ import gjjzx.com.robotclient.diy.MyRecyclerView;
 import gjjzx.com.robotclient.diy.PowerOffDialog;
 import gjjzx.com.robotclient.diy.SettingDialog;
 import gjjzx.com.robotclient.diy.SongsInfoDialog;
-import gjjzx.com.robotclient.socket.SocketConn;
 import gjjzx.com.robotclient.util.LocalSQLUtil;
-import gjjzx.com.robotclient.util.LogUtil;
-import gjjzx.com.robotclient.util.OrderUtil;
 import gjjzx.com.robotclient.util.SPUtil;
 
 public class MainActivity extends AppCompatActivity implements PowerOffDialog.PowerOffListener, SettingDialog.onSettingListener, LoginDialog.LoginSuccessListener, DeleteSongDialog.DeleteSongListener, AddSongDialog.onAddSongListener {
@@ -77,8 +74,28 @@ public class MainActivity extends AppCompatActivity implements PowerOffDialog.Po
         @Override
         public void handleMessage(Message msg) {
             switch (msg.what) {
-                case 1:
+                case ADDSONGSUCCESS:
+                    showSuccess("添加歌曲成功");
                     break;
+                case ADDSONGFAIL:
+                    showFail("添加歌曲失败");
+                    break;
+                case WAITING:
+                    waitingShow(msg.obj.toString());
+                    break;
+                case DELETEPLAYINGSONGFAIL:
+                    showFail("无法删除正在播放的音乐");
+                    break;
+                case DELETESONGSUCCESS:
+                    showSuccess("删除歌曲成功");
+                    break;
+                case DELETEERRORSONG:
+                    showFail("要删除的歌曲不存在");
+                    break;
+                case DELETESONGFAIL:
+                    showFail("删除歌曲失败");
+                    break;
+
                 default:
                     break;
             }
@@ -190,7 +207,9 @@ public class MainActivity extends AppCompatActivity implements PowerOffDialog.Po
             ihandler.sendMessage(msg);
             addSongDialog.dismiss();
             try {
+                //添加歌曲到数据库并返回最新列表
                 songList = LocalSQLUtil.addSong(sb);
+                //刷新列表
                 rvAdapter.listRefresh(songList);
                 ihandler.sendEmptyMessageDelayed(ADDSONGSUCCESS, 1000);
             } catch (Exception e) {
@@ -278,7 +297,7 @@ public class MainActivity extends AppCompatActivity implements PowerOffDialog.Po
 
     //成功弹窗
     private void showSuccess(String str) {
-        LemonBubble.showRight(this, str, 1000);
+        LemonBubble.showRight(this, str, 2000);
     }
 
     //视图绑定
@@ -413,7 +432,7 @@ public class MainActivity extends AppCompatActivity implements PowerOffDialog.Po
         //存储数据，并断开连接
         SPUtil.saveDES(ip, port);
         //断开socket链接
-        sc.closeAll();
+//        sc.closeAll();
         //隐藏
         settingDialog.dismiss();
         //修改成功提示
