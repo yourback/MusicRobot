@@ -42,23 +42,34 @@ import gjjzx.com.robotclient.diy.MyRecyclerView;
 import gjjzx.com.robotclient.diy.PowerOffDialog;
 import gjjzx.com.robotclient.diy.SettingDialog;
 import gjjzx.com.robotclient.diy.SongsInfoDialog;
+import gjjzx.com.robotclient.socket.SocketLong;
 import gjjzx.com.robotclient.util.LocalSQLUtil;
 import gjjzx.com.robotclient.util.SPUtil;
 
-public class MainActivity extends AppCompatActivity implements PowerOffDialog.PowerOffListener, SettingDialog.onSettingListener, LoginDialog.LoginSuccessListener, DeleteSongDialog.DeleteSongListener, AddSongDialog.onAddSongListener {
-
-    private static final String TAG = "客户端";
-    private static final int CONNECTEDFAIL = 10000;
+public class MainActivity extends AppCompatActivity implements SocketLong.iPowerOff, SocketLong.iOrder, SocketLong.iConnect, PowerOffDialog.PowerOffListener, SettingDialog.onSettingListener, LoginDialog.LoginSuccessListener, DeleteSongDialog.DeleteSongListener, AddSongDialog.onAddSongListener {
+    // 连接
+    private static final int CONNECTSUCCESS = 10010;
+    private static final int CONNECTFAIL = 10000;
+    //点歌
     private static final int ORDERSONGSUCCESS = 10001;
+    private static final int ORDERSONGFAIL = 10011;
+    //歌曲播放完毕
+    private static final int SONGPLAYFINISHED = 10009;
+    // 等待
     private static final int WAITING = 10002;
+    // 删除歌曲
     private static final int DELETESONGSUCCESS = 10003;
     private static final int DELETESONGFAIL = 10004;
     private static final int DELETEPLAYINGSONGFAIL = 10005;
     private static final int DELETEERRORSONG = 10006;
+    // 添加歌曲
     private static final int ADDSONGSUCCESS = 10007;
     private static final int ADDSONGFAIL = 10008;
-    private static final int SONGPLAYFINISHED = 10009;
-    private static final int POWEROFF = 10010;
+
+    //关机
+    private static final int POWEROFFSUCCESS = 10012;
+    private static final int POWEROFFFAIL = 10013;
+
 
     //当前播放的音乐，切换音乐的时候更改
     private SongBean currentSong;
@@ -67,7 +78,7 @@ public class MainActivity extends AppCompatActivity implements PowerOffDialog.Po
     class UIhandler extends Handler {
         WeakReference<MainActivity> weakReference;
 
-        public UIhandler(MainActivity activity) {
+        UIhandler(MainActivity activity) {
             weakReference = new WeakReference<>(activity);
         }
 
@@ -95,7 +106,30 @@ public class MainActivity extends AppCompatActivity implements PowerOffDialog.Po
                 case DELETESONGFAIL:
                     showFail("删除歌曲失败");
                     break;
-
+                case CONNECTFAIL:
+                    showFail("连接失败");
+                    break;
+                case CONNECTSUCCESS:
+                    waitingShow("连接成功");
+                    break;
+                case ORDERSONGSUCCESS:
+                    showSuccess("点歌成功");
+                    break;
+                case ORDERSONGFAIL:
+                    showFail("点歌失败");
+                    break;
+                case SONGPLAYFINISHED:
+                    // 完全关闭
+                    Toast.makeText(MainActivity.this, currentSong.getSongName() + "播放完毕", Toast.LENGTH_LONG).show();
+                    currentSong = null;
+                    break;
+                case POWEROFFSUCCESS:
+                    showSuccess("电机关闭成功");
+                    SocketLong.getInstance(MainActivity.this).closeAll();
+                    break;
+                case POWEROFFFAIL:
+                    showFail("电机关闭失败");
+                    break;
                 default:
                     break;
             }
@@ -272,19 +306,6 @@ public class MainActivity extends AppCompatActivity implements PowerOffDialog.Po
     }
 
 
-    //点歌成功的回调需要执行的——需要在主线程调用
-    public void switchSongs(String songName) {
-
-        titleText.setText(String.format("当前播放曲目：%s", songName));
-    }
-
-
-    //点歌（adapter调用）
-    public void orderSong(SongBean songBean) {
-
-    }
-
-
     //等待弹窗
     private void waitingShow(String str) {
         LemonBubble.showRoundProgress(this, str);
@@ -354,6 +375,7 @@ public class MainActivity extends AppCompatActivity implements PowerOffDialog.Po
                                 break;
                             case R.id.nav_settings:
                                 settingDialog.show(getFragmentManager(), "settingDialog");
+                                break;
                             case R.id.nav_shutdown:
                                 powerOffDialog.show(getFragmentManager(), "powerOffDialog");
                                 break;
@@ -392,7 +414,7 @@ public class MainActivity extends AppCompatActivity implements PowerOffDialog.Po
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        Log.e(TAG, "onDestroy: ");
+        Log.e("sy", "onDestroy: ");
         //所有歌曲都不在播放
         LocalSQLUtil.setNoSongPlaying();
     }
@@ -408,7 +430,7 @@ public class MainActivity extends AppCompatActivity implements PowerOffDialog.Po
     private static Boolean isExit = false;
 
     private void exitBy2Click() {
-        Timer tExit = null;
+        Timer tExit;
         if (!isExit) {
             isExit = true; // 准备退出
             Toast.makeText(this, "再按一次退出程序", Toast.LENGTH_SHORT).show();
@@ -432,7 +454,7 @@ public class MainActivity extends AppCompatActivity implements PowerOffDialog.Po
         //存储数据，并断开连接
         SPUtil.saveDES(ip, port);
         //断开socket链接
-//        sc.closeAll();
+        SocketLong.getInstance(this).closeAll();
         //隐藏
         settingDialog.dismiss();
         //修改成功提示
@@ -441,8 +463,115 @@ public class MainActivity extends AppCompatActivity implements PowerOffDialog.Po
 
     @Override
     public void onPowerOff() {
+        SocketLong.getInstance(this).sendOrder(null);
+    }
+
+    //点歌（adapter调用）
+    public void orderSong(SongBean songBean) {
+        SocketLong.getInstance(this).sendOrder(songBean);
+    }
+
+
+    /**
+     * 如果songName = "" 则就是播放完成 或者关机成功
+     * 否则就是切歌
+     * 主线程中执行
+     *
+     * @param songName
+     */
+    public void switchSongs(final String songName) {
+        ihandler.post(new Runnable() {
+            @Override
+            public void run() {
+                if (TextUtils.isEmpty(songName)) {
+                    titleText.setText("歌曲列表");
+                } else {
+                    titleText.setText(String.format("当前播放曲目：%s", songName));
+                }
+                rvAdapter.listRefresh(songList);
+            }
+        });
 
     }
 
+
+    //-----------------------------------------连接提示--------------------------------------------------
+
+    @Override
+    public void conncetStart() {
+        Message msg = new Message();
+        msg.what = WAITING;
+        msg.obj = "连接中......";
+        ihandler.sendMessage(msg);
+    }
+
+    @Override
+    public void connectSuccess() {
+        ihandler.sendEmptyMessage(CONNECTSUCCESS);
+    }
+
+    @Override
+    public void connectFail() {
+        ihandler.sendEmptyMessage(CONNECTFAIL);
+    }
+
+    //-----------------------------------------点歌提示--------------------------------------------------
+
+    @Override
+    public void orderStart(SongBean sb) {
+        Message msg = new Message();
+        msg.what = WAITING;
+        msg.obj = "点歌中......";
+        ihandler.sendMessage(msg);
+    }
+
+    @Override
+    public void orderSuccess(final SongBean sb) {
+        /* *
+         * 置其他歌曲都是不播放状态
+         * title名字改变
+         * 刷新界面
+         */
+        //其中包括了设置其他不播放
+        songList = LocalSQLUtil.setSongPlaying(sb.getSongCode());
+        switchSongs(sb.getSongName());
+        currentSong = sb;
+        ihandler.sendEmptyMessage(ORDERSONGSUCCESS);
+    }
+
+    @Override
+    public void orderFail(SongBean sb) {
+        ihandler.sendEmptyMessage(ORDERSONGFAIL);
+    }
+
+    @Override
+    public void orderEnd() {
+        //设置所有歌曲不播放
+        songList = LocalSQLUtil.setNoSongPlaying();
+        switchSongs("");
+        ihandler.sendEmptyMessage(SONGPLAYFINISHED);
+    }
+
+
+    //-----------------------------------------关机提示--------------------------------------------------
+    @Override
+    public void powerOffStart() {
+        Message msg = new Message();
+        msg.what = WAITING;
+        msg.obj = "电机关闭中......";
+        ihandler.sendMessage(msg);
+    }
+
+    @Override
+    public void powerOffSuccess() {
+        switchSongs("");
+
+        ihandler.sendEmptyMessage(POWEROFFSUCCESS);
+    }
+
+    @Override
+    public void powerOffFail() {
+        ihandler.sendEmptyMessage(POWEROFFFAIL);
+    }
 
 }

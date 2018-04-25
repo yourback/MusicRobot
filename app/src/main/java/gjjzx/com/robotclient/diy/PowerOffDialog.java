@@ -34,13 +34,17 @@ public class PowerOffDialog extends DialogFragment {
         View v = inflater.inflate(R.layout.judgmentdialog, null);
 
         btn_yes = v.findViewById(R.id.judgment_yes);
+        btn_yes.setText("关机");
         btn_no = v.findViewById(R.id.judgment_no);
+        btn_no.setText("返回");
+
         tv_msg = v.findViewById(R.id.judgment_tv);
         tv_msg.setText("是否关闭电机？");
         btn_yes.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 PowerOffListener listener = (PowerOffListener) getActivity();
+                dismiss();
                 listener.onPowerOff();
             }
         });

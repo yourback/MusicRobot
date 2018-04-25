@@ -34,10 +34,10 @@ public class LocalSQLUtil {
             addSong(new SongBean(R.mipmap.pan, "我的天空", "9"));
         }
         list = DataSupport.findAll(SongBean.class);
-        LogUtil.e("LocalSQLUtil", "从本地数据库取出的数据：");
-        for (SongBean s : list) {
-            LogUtil.e("LocalSQLUtil", s.toString());
-        }
+//        LogUtil.e("LocalSQLUtil", "从本地数据库取出的数据：");
+//        for (SongBean s : list) {
+//            LogUtil.e("LocalSQLUtil", s.toString());
+//        }
         return list;
     }
 
@@ -61,9 +61,17 @@ public class LocalSQLUtil {
 
     public static List<SongBean> setSongPlaying(String str) {
         Log.e("LocalSQLUtil", "设置歌曲代码为：" + str + "歌曲播放");
+        //设置其他歌曲都不播放
+        setNoSongPlaying();
         SongBean s = new SongBean();
         s.setPlaying(true);
         s.updateAll("songCode = ?", str);
         return getNewSongList();
+    }
+
+
+    public static SongBean getSongBeanFromCode(String code) {
+        List<SongBean> list = DataSupport.where("songCode = ?", code).find(SongBean.class);
+        return list.get(0);
     }
 }
