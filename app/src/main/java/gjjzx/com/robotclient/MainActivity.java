@@ -47,7 +47,6 @@ import gjjzx.com.robotclient.diy.PowerOffDialog;
 import gjjzx.com.robotclient.diy.SettingDialog;
 import gjjzx.com.robotclient.diy.SongsInfoDialog;
 import gjjzx.com.robotclient.socket.AlarmReceiver;
-import gjjzx.com.robotclient.socket.SocketConn;
 import gjjzx.com.robotclient.socket.SocketManager;
 import gjjzx.com.robotclient.util.LocalSQLUtil;
 import gjjzx.com.robotclient.util.LogUtil;
@@ -101,9 +100,6 @@ public class MainActivity extends AppCompatActivity implements SocketManager.son
     private DeleteSongDialog deleteSongDialog;
     private SettingDialog settingDialog;
     private PowerOffDialog powerOffDialog;
-
-    //socket链接对象
-    private SocketConn sc;
 
 
     //弱引用对象
@@ -185,8 +181,6 @@ public class MainActivity extends AppCompatActivity implements SocketManager.son
 
         initRecyclerView();
 
-//        initSocketConn();
-
         initDialog();
 
         initAlarm();
@@ -205,7 +199,6 @@ public class MainActivity extends AppCompatActivity implements SocketManager.son
         rvAdapter.setOnItemClickLitener(new CardRvAdapter.OnItemClickLitener() {
             @Override
             public void onItemClick(View view, int position) {
-//                Toast.makeText(MainActivity.this, songList.get(position).getSongName() + ":" + songList.get(position).getSongCode(), Toast.LENGTH_SHORT).show();
                 for (int j = 0; j < songList.size(); j++) {
                     if (j == position) {
                         SongBean bean = songList.get(position);
@@ -313,58 +306,6 @@ public class MainActivity extends AppCompatActivity implements SocketManager.son
         else {
             Toast.makeText(MainActivity.this, "管理码错误", Toast.LENGTH_SHORT).show();
         }
-    }
-
-    //socket连接监听初始化
-    private void initSocketConn() {
-        sc = new SocketConn();
-        //如果有监听，请在这里初始化
-        //socket连接失败监听
-        sc.setConnectedFail(new SocketConn.ConnectedFail() {
-            @Override
-            public void failFunc() {
-                handler.sendEmptyMessageDelayed(CONNECTEDFAIL, 1000);
-            }
-        });
-
-        //点歌成功监听初始化
-        sc.setOrderSongListener(new SocketConn.OrderSongListener() {
-            @Override
-            public void successFunc(String str) {
-                /**
-                 * 1、从本地数据库中找到正在播放的歌曲
-                 *          以下if部分放在点歌开始的时候！！！！！
-                 *
-                 *         if 歌曲的代码 == str
-                 *              提示：歌曲正在播放中...
-                 *              （这里可以弹出对话框，停止播放 | 重新播放）
-                 *         else
-                 *              播放状态全部置false
-                 *              更新code为str的歌曲的播放状态为true
-                 *
-                 *
-                 */
-
-
-                //点歌成功后设置本地数据库全歌曲不在播放
-                LocalSQLUtil.setNoSongPlaying();
-                //更新本地数据库中对应的歌曲code为str的播放状态
-                songList = LocalSQLUtil.setSongPlaying(str);
-                //点歌成功，切换歌曲
-//                handler.sendEmptyMessageDelayed(ORDERSONGSUCCESS, 1000);
-                Message message = new Message();
-                message.what = ORDERSONGSUCCESS;
-                message.obj = str;
-                handler.sendMessage(message);
-            }
-
-            @Override
-            public void songfinished() {
-                //歌曲播放完毕
-                songList = LocalSQLUtil.setNoSongPlaying();
-                handler.sendEmptyMessage(SONGPLAYFINISHED);
-            }
-        });
     }
 
 
@@ -587,9 +528,6 @@ public class MainActivity extends AppCompatActivity implements SocketManager.son
         SPUtil.saveDES(ip, port);
         //存储音乐结束时间
         SPUtil.setStopTime(timedelay);
-        //断开socket链接
-        if (sc != null)
-            sc.closeAll();
         //隐藏
         settingDialog.dismiss();
         //修改成功提示
