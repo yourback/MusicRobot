@@ -34,7 +34,7 @@ public class PowerOffDialog extends DialogFragment {
         View v = inflater.inflate(R.layout.judgmentdialog, null);
 
         btn_yes = v.findViewById(R.id.judgment_yes);
-        btn_yes.setText("关机");
+        btn_yes.setText("确认");
         btn_no = v.findViewById(R.id.judgment_no);
         btn_no.setText("返回");
 

@@ -125,7 +125,6 @@ public class MainActivity extends AppCompatActivity implements SocketLong.iPower
                     break;
                 case POWEROFFSUCCESS:
                     showSuccess("电机关闭成功");
-                    SocketLong.getInstance(MainActivity.this).closeAll();
                     break;
                 case POWEROFFFAIL:
                     showFail("电机关闭失败");
@@ -417,6 +416,8 @@ public class MainActivity extends AppCompatActivity implements SocketLong.iPower
         Log.e("sy", "onDestroy: ");
         //所有歌曲都不在播放
         LocalSQLUtil.setNoSongPlaying();
+        //断开连接
+        SocketLong.getInstance(MainActivity.this).closeAll();
     }
 
 
@@ -564,9 +565,11 @@ public class MainActivity extends AppCompatActivity implements SocketLong.iPower
 
     @Override
     public void powerOffSuccess() {
+        //设置所有歌曲不播放
+        songList = LocalSQLUtil.setNoSongPlaying();
         switchSongs("");
-
         ihandler.sendEmptyMessage(POWEROFFSUCCESS);
+        SocketLong.getInstance(MainActivity.this).closeAll();
     }
 
     @Override

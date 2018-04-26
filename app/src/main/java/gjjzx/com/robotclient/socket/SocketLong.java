@@ -20,6 +20,7 @@ import gjjzx.com.robotclient.util.LocalSQLUtil;
 import gjjzx.com.robotclient.util.LogUtil;
 import gjjzx.com.robotclient.util.OrderUtil;
 import gjjzx.com.robotclient.util.SPUtil;
+import gjjzx.com.robotclient.util.ThreadUtil;
 
 
 /**
@@ -112,6 +113,9 @@ public class SocketLong {
                 } else if (line.equals("256")) {
                     //歌曲结束
                     iOrderManager(END);
+                } else if (line.equals("258")) {
+                    //关闭点击返回值
+                    iPowerOffManager(SUCCESS);
                 } else {
                     //点歌成功
                     //检索固定id的songbean对象
@@ -127,7 +131,27 @@ public class SocketLong {
         }
     }
 
+    //断开连接
     public void closeAll() {
+        //查看socket是否已经连接
+        if (!isSocketConnected()) {
+            return;
+        }
+        //查看是不是主线程，是主线程则开辟线程执行
+        if (!ThreadUtil.isMainThread()) {
+            closeAllInner();
+        } else {
+            mThreadPool.execute(new Runnable() {
+                @Override
+                public void run() {
+                    closeAllInner();
+                }
+            });
+        }
+    }
+
+    //断开连接Inner
+    private void closeAllInner() {
         try {
             LogUtil.e("关闭", "关闭br，bw，socket");
             br.close();
@@ -139,13 +163,13 @@ public class SocketLong {
     }
 
     //查看socket状态
-    private boolean socketStatus() {
+    private boolean isSocketConnected() {
         return !(socket == null || !socket.isConnected() || socket.isClosed());
     }
 
     //发送点歌命令
     public void sendOrder(final SongBean sb) {
-        if (!socketStatus()) {
+        if (!isSocketConnected()) {
             connectAndSendData(sb);
         } else {
             sendData(sb);
@@ -176,7 +200,6 @@ public class SocketLong {
             bw.write(OrderUtil.shutDown());
             bw.flush();
             LogUtil.e("关机", "发送关机指令成功");
-            iPowerOffManager(SUCCESS);
         } catch (IOException e) {
             LogUtil.e("关机", "关机出错");
             LogUtil.e("关机", e.toString());
