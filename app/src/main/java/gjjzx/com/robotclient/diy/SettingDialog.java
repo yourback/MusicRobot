@@ -2,7 +2,6 @@ package gjjzx.com.robotclient.diy;
 
 import android.app.Dialog;
 import android.app.DialogFragment;
-import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.text.InputType;
@@ -28,10 +27,7 @@ public class SettingDialog extends DialogFragment {
 
     private Button setSubmit;
 
-    private Context mContext;
-
-    public SettingDialog(Context mContext) {
-        this.mContext = mContext;
+    public SettingDialog() {
     }
 
     @Nullable

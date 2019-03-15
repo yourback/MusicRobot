@@ -22,22 +22,33 @@ public class LocalSQLUtil {
     public static List<SongBean> getNewSongList() {
         List<SongBean> list = DataSupport.findAll(SongBean.class);
         if (list.size() == 0) {
-            addSong(new SongBean(R.mipmap.pan, "月光", "0"));
-            addSong(new SongBean(R.mipmap.pan, "命运", "1"));
-            addSong(new SongBean(R.mipmap.pan, "夜曲", "2"));
-            addSong(new SongBean(R.mipmap.pan, "极乐净土", "3"));
-            addSong(new SongBean(R.mipmap.pan, "白夜", "4"));
-            addSong(new SongBean(R.mipmap.pan, "是非题", "5"));
-            addSong(new SongBean(R.mipmap.pan, "花香", "6"));
-            addSong(new SongBean(R.mipmap.pan, "海阔天空", "7"));
-            addSong(new SongBean(R.mipmap.pan, "童话镇", "8"));
-            addSong(new SongBean(R.mipmap.pan, "我的天空", "9"));
+            addSong(new SongBean(R.mipmap.pan, "世上只有妈妈好", "1"));
+            addSong(new SongBean(R.mipmap.pan, "女儿情", "2"));
+            addSong(new SongBean(R.mipmap.pan, "茉莉花", "3"));
+            addSong(new SongBean(R.mipmap.pan, "在水一方", "4"));
+            addSong(new SongBean(R.mipmap.pan, "明天会更好", "5"));
+            addSong(new SongBean(R.mipmap.pan, "让我们荡起双桨", "6"));
+            addSong(new SongBean(R.mipmap.pan, "我的中国心", "7"));
+            addSong(new SongBean(R.mipmap.pan, "生日快乐歌", "8"));
+            addSong(new SongBean(R.mipmap.pan, "童年", "9"));
+            addSong(new SongBean(R.mipmap.pan, "两只老虎", "10"));
+            addSong(new SongBean(R.mipmap.pan, "歌唱祖国", "11"));
+            addSong(new SongBean(R.mipmap.pan, "绒花", "12"));
+            addSong(new SongBean(R.mipmap.pan, "少年壮志不言愁", "13"));
+            addSong(new SongBean(R.mipmap.pan, "太阳出来喜洋洋", "14"));
+            addSong(new SongBean(R.mipmap.pan, "滚滚长江东逝水", "15"));
+            addSong(new SongBean(R.mipmap.pan, "敖包相会", "16"));
+            addSong(new SongBean(R.mipmap.pan, "欢乐颂", "17"));
+            addSong(new SongBean(R.mipmap.pan, "小星星", "18"));
+            addSong(new SongBean(R.mipmap.pan, "沧海一声笑", "19"));
+            addSong(new SongBean(R.mipmap.pan, "送别", "20"));
+            addSong(new SongBean(R.mipmap.pan, "浏阳河", "21"));
         }
         list = DataSupport.findAll(SongBean.class);
-        LogUtil.e("LocalSQLUtil", "从本地数据库取出的数据：");
-        for (SongBean s : list) {
-            LogUtil.e("LocalSQLUtil", s.toString());
-        }
+//        LogUtil.e("LocalSQLUtil", "从本地数据库取出的数据：");
+//        for (SongBean s : list) {
+//            LogUtil.e("LocalSQLUtil", s.toString());
+//        }
         return list;
     }
 
@@ -61,9 +72,17 @@ public class LocalSQLUtil {
 
     public static List<SongBean> setSongPlaying(String str) {
         Log.e("LocalSQLUtil", "设置歌曲代码为：" + str + "歌曲播放");
+        //设置其他歌曲都不播放
+        setNoSongPlaying();
         SongBean s = new SongBean();
         s.setPlaying(true);
         s.updateAll("songCode = ?", str);
         return getNewSongList();
+    }
+
+
+    public static SongBean getSongBeanFromCode(String code) {
+        List<SongBean> list = DataSupport.where("songCode = ?", code).find(SongBean.class);
+        return list.get(0);
     }
 }

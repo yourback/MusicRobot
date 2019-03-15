@@ -2,7 +2,6 @@ package gjjzx.com.robotclient.diy;
 
 import android.app.Dialog;
 import android.app.DialogFragment;
-import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.text.InputType;
@@ -39,10 +38,7 @@ public class LoginDialog extends DialogFragment {
     private Button btn_submit, btn_cancel;
     private EditText et_managercode;
 
-    private Context mContext;
-
-    public LoginDialog(Context mContext) {
-        this.mContext = mContext;
+    public LoginDialog() {
     }
 
     @Nullable
@@ -64,7 +60,7 @@ public class LoginDialog extends DialogFragment {
                     LoginSuccessListener listener = (LoginSuccessListener) getActivity();
                     listener.onLoginSuccessListener(managercode.equals(MyApplication.MANAGERSTR));
                 } else {
-                    Toast.makeText(mContext, "请填写管理码后确认", Toast.LENGTH_LONG).show();
+                    Toast.makeText(getActivity(), "请填写管理码后确认", Toast.LENGTH_LONG).show();
                 }
             }
         });
