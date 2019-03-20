@@ -7,12 +7,12 @@
     android:padding="10dp">
 
     <TextView
+        android:id="@+id/judgment_tv"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="20dp"
         android:gravity="center_horizontal"
-        android:id="@+id/judgment_tv"
-        android:text="是否删除"
+        android:text="是否关闭电机？"
         android:textColor="#000"
         android:textSize="20sp" />
 
@@ -28,7 +28,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:background="@android:color/holo_green_dark"
-            android:text="@string/cancel"
+            android:text="@string/ret"
             android:textColor="#fff"
             android:textSize="18sp" />
 
@@ -38,7 +38,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:background="@android:color/holo_red_light"
-            android:text="@string/delete"
+            android:text="@string/shutdown"
             android:textColor="#fff"
             android:textSize="18sp" />
     </LinearLayout>

@@ -2,6 +2,7 @@ package gjjzx.com.robotclient.diy;
 
 import android.content.Context;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -26,6 +27,8 @@ public class CardRvAdapter extends RecyclerView.Adapter<CardRvAdapter.ItemViewHo
     public CardRvAdapter(Context context, List<SongBean> list) {
         this.context = context;
         this.list = list;
+
+        Log.e("CardRvAdapter", "list.size: "+list.size() );
     }
 
     public void listRefresh(List<SongBean> songBeanList) {
@@ -41,6 +44,9 @@ public class CardRvAdapter extends RecyclerView.Adapter<CardRvAdapter.ItemViewHo
 
     @Override
     public void onBindViewHolder(final ItemViewHolder holder, final int position) {
+
+        Log.e("onBindViewHolder", "position: "+position );
+        Log.e("onBindViewHolder", "list.size: "+list.size() );
 
         final int i = position % list.size();
 

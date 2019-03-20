@@ -24,4 +24,15 @@ public class SPUtil {
         String ip = r.getString("ip", "192.168.1.1");
         return new DesInfo(ip, port);
     }
+
+    public static void setStopTime(Integer timedelay) {
+        SharedPreferences.Editor editor = MyApplication.getContext().getSharedPreferences("time", Context.MODE_PRIVATE).edit();
+        editor.putInt("delay", timedelay);
+        editor.apply();
+    }
+
+    public static Integer getStopTime() {
+        SharedPreferences r = MyApplication.getContext().getSharedPreferences("time", Context.MODE_PRIVATE);
+        return r.getInt("delay", 30);
+    }
 }
